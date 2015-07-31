@@ -79,9 +79,7 @@ public class DragView extends View {
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
 		//画呀画
-		int r = Math.min(m_iViewWidth, m_iViewHeight);				
-		canvas.drawCircle(r/2, r/2, r/2, m_Paint);
-		
+		canvas.drawBitmap(m_ViewBitmap, 0, 0, m_Paint);
 	}
 	
 	public void show(int rawX, int rawY) {
@@ -116,7 +114,8 @@ public class DragView extends View {
 	}
 	
 	public Bitmap getViewBitmap() {
-		return m_ViewBitmap;
+//		return m_ViewBitmap;
+		return Utils.getViewBitmap(this);
 	}
 	
 	public void clearResource() {

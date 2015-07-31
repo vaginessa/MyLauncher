@@ -251,6 +251,9 @@ public class DragController {
 		final int screenX = (int) ev.getRawX();
 		final int screenY = (int) ev.getRawY();
 		
+		m_iRawX = (int) ev.getRawX();
+		m_iRawY = (int) ev.getRawY();
+		
 		switch (action) {
 		case MotionEvent.ACTION_DOWN:
 			Utils.log(TAG, "onTouchEvent()-action_down");

@@ -145,7 +145,7 @@ public class DragLayer extends FrameLayout {
 	/** 移动的时间 */
 	private static final long DRAGVIEW_SCROLL_TIME = 4000;
 	
-	/** 用来表示DragView移动效果的相关信息 */
+	/** 用来表示DragView滑动效果的相关信息 */
 	private CellLayout.DropObjectInfo m_DropObjectInfo;
 	
 	/**
@@ -165,7 +165,7 @@ public class DragLayer extends FrameLayout {
 			m_DragViewAnim = new ValueAnimator();
 			m_DragViewAnim.setDuration(DRAGVIEW_SCROLL_TIME);
 		}
-		m_DragViewAnim.setIntValues(1, 100);
+		m_DragViewAnim.setFloatValues(0f, 1f);
 		m_DragViewAnim.addListener(new AnimatorListener() {
 			
 			@Override
@@ -200,13 +200,12 @@ public class DragLayer extends FrameLayout {
 			
 			@Override
 			public void onAnimationUpdate(ValueAnimator animation) {
-				int value = (Integer) animation.getAnimatedValue();
 				//这部分的计算应放到TypeE..中去的，但是，这样方便
-				float process = (float)value/(float)100;
-				int allprocessX = m_DropObjectInfo.finalX - m_DropObjectInfo.originX;
-				int alllProcessY = m_DropObjectInfo.finalY - m_DropObjectInfo.originY;
+				float process = (Float) animation.getAnimatedValue();
+				int allprocessX = m_DropObjectInfo.originX - m_DropObjectInfo.finalX;
+				int allProcessY = m_DropObjectInfo.originY - m_DropObjectInfo.finalY;
 				int curX = (int) (m_DropObjectInfo.finalX + allprocessX * process);
-				int curY = (int) (m_DropObjectInfo.finalY + alllProcessY * process);
+				int curY = (int) (m_DropObjectInfo.finalY + allProcessY * process);
 				m_DropObjectInfo.curX = curX;
 				m_DropObjectInfo.curY = curY;
 				

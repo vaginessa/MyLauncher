@@ -365,25 +365,26 @@ public class CellLayout extends ViewGroup {
 	public void onDropCompleted(View dropTargetView, View dragView, Object itemInfo, int rawX, int rawY, int iOffX, int iOffy, boolean success) {
 		
 			/*
-			 * 使DragView平滑移动到原来的位置或新的位置，Item View设置可见，draglayer-requetLayout
+			 * 使DragView平滑移动到原来的位置或新的位置，Item View设置可见，draglayer-invalid
 			 */
 		final DropObjectInfo info = new DropObjectInfo();
 		final CellInfo cellInfo = (CellInfo) itemInfo;
 		final DragObjectInfo dragInfo = m_DragObjectInfo;
 		final int[] iArrayTempOff = {0, 0};
 		
-		info.finalX = rawX;
-		info.finalY = rawY;
-
+		adjustToDragLayer(iArrayTempOff, dragView, getContext(), true);
+		info.finalX = iArrayTempOff[0];
+		info.finalY = iArrayTempOff[1];
+		
 		info.dragView = (DragView) dragView;
 		info.itemView = cellInfo.getView();
-
-		adjustToDragLayer(iArrayTempOff, dropTargetView);
+		
+		adjustToDragLayer(iArrayTempOff, cellInfo.getView(), getContext(), true);
 		
 		if (!success) {
 			//移动回原来的位置
-			info.originX = iOffX +iArrayTempOff[0]; 
-			info.originY = iOffy + iArrayTempOff[1];
+			info.originX = iArrayTempOff[0];
+			info.originY = iArrayTempOff[1];
 			info.cellX = cellInfo.getCellX();
 			info.cellY = cellInfo.getCellY();
 			info.cellHSpan = cellInfo.getCellHSpan();
@@ -392,8 +393,8 @@ public class CellLayout extends ViewGroup {
 		} else {
 			//移动到新的位置
 			info.canDrop = true;
-			info.originX = dragInfo.x + iArrayTempOff[0];
-			info.originY = dragInfo.y + iArrayTempOff[1];
+			info.originX = dragInfo.x;	//TODO relative to draglayer take a cause
+			info.originY = dragInfo.y;
 			info.cellX = dragInfo.cellX;
 			info.cellY = dragInfo.cellY;
 			info.cellHSpan = dragInfo.cellHSpan;
@@ -412,19 +413,27 @@ public class CellLayout extends ViewGroup {
 	/** temp */
 	private int[] m_iArrayTempCoor = new int[2];
 	/**
-	 * 把左上角的坐标调整为相对于DragLayer绘制层的坐标
-	 * @param coordnates coordnates[0]=left, coordnates[1]=top，要先赋值，返回偏移值
+	 * 返回View的相对于DragLayer的坐标值
+	 * @param coordnates coordnates[0]=left, coordnates[1]=top，返回值
 	 * @param view
+	 * @param context
+	 * @param subStatus	是否减去状态栏的高度，一般设为true，减去其高度
 	 */
-	private void adjustToDragLayer(int[] coordnates, View view) {
+	private void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
 		if (view == null) {
 			return;
+		}
+		
+		if (coordnates == null) {
+			throw new NullPointerException();
 		}
 		
 		final DragLayer dragLayer = m_Launcher.getDragLayer();
 		
 		int iOffLeft = 0;
 		int iOffTop = 0;
+		coordnates[0] = 0;
+		coordnates[1] = 0;
 		
 		final int[] iArrayTempCoor = m_iArrayTempCoor; 
 		view.getLocationOnScreen(iArrayTempCoor);
@@ -434,6 +443,11 @@ public class CellLayout extends ViewGroup {
 		
 		coordnates[0] += iOffLeft;
 		coordnates[1] += iOffTop;
+		
+		if (subStatus) {
+			int iStatusHeight = Utils.getStatusHeight(context);
+			coordnates[1] += iStatusHeight;
+		}
 	}
 	
 	/**

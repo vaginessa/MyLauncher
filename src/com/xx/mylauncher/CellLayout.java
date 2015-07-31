@@ -10,6 +10,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 
 /**
@@ -182,7 +183,7 @@ public class CellLayout extends ViewGroup {
 		for (int i = 0; i<childCounts; i++) {
 			child = getChildAt(i);
 			
-			//TODO 这里需要
+			//TODO 这里需要，如何最好的组织当一个Item View按下时重置它在CellLayout的占用位置
 			if (child.getVisibility() != View.VISIBLE) {
 				continue;
 			}
@@ -209,19 +210,11 @@ public class CellLayout extends ViewGroup {
 			int cellVSpan = lp.cellVSpan;
 			
 //			Utils.log(TAG, "cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d", cellX, cellY, cellHSpan, cellVSpan);
-			
 			for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
 				for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
 					m_bCellsOcupied[ti][tj] = true;
 				}
 			}
-			
-		/*	for (int ti=cellX; ti<=cellX+cellHSpan-1; ti++) {
-				for (int tj=cellY; tj<=cellY+cellVSpan-1; tj++) {
-					m_bCellsOcupied[ti][tj] = true;
-				}
-			}
-			*/
 		}
 		
 	}
@@ -351,9 +344,96 @@ public class CellLayout extends ViewGroup {
 			for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
 				m_bCellsOcupied[ti][tj] = false;
 				
-				debugBooleanArray();
+//				debugBooleanArray();
 			}
 		}
+	}
+	
+	public void flagOcupied(int cellX, int cellY, int cellHSpan, int cellVSpan) {
+		for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
+			for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
+				m_bCellsOcupied[ti][tj] = true;
+				
+//				debugBooleanArray();
+			}
+		}
+	}
+	
+   /**
+    * @see DragSource#onDropCompleted(View, View, Object, int, int, int, int, boolean) 
+    */
+	public void onDropCompleted(View dropTargetView, View dragView, Object itemInfo, int rawX, int rawY, int iOffX, int iOffy, boolean success) {
+		
+			/*
+			 * 使DragView平滑移动到原来的位置或新的位置，Item View设置可见，draglayer-requetLayout
+			 */
+		final DropObjectInfo info = new DropObjectInfo();
+		final CellInfo cellInfo = (CellInfo) itemInfo;
+		final DragObjectInfo dragInfo = m_DragObjectInfo;
+		final int[] iArrayTempOff = {0, 0};
+		
+		info.finalX = rawX;
+		info.finalY = rawY;
+
+		info.dragView = (DragView) dragView;
+		info.itemView = cellInfo.getView();
+
+		adjustToDragLayer(iArrayTempOff, dropTargetView);
+		
+		if (!success) {
+			//移动回原来的位置
+			info.originX = iOffX +iArrayTempOff[0]; 
+			info.originY = iOffy + iArrayTempOff[1];
+			info.cellX = cellInfo.getCellX();
+			info.cellY = cellInfo.getCellY();
+			info.cellHSpan = cellInfo.getCellHSpan();
+			info.cellVSpan = cellInfo.getCellVSpan();
+			info.canDrop = false;
+		} else {
+			//移动到新的位置
+			info.canDrop = true;
+			info.originX = dragInfo.x + iArrayTempOff[0];
+			info.originY = dragInfo.y + iArrayTempOff[1];
+			info.cellX = dragInfo.cellX;
+			info.cellY = dragInfo.cellY;
+			info.cellHSpan = dragInfo.cellHSpan;
+			info.cellVSpan = dragInfo.cellVSpan;
+		}
+		info.init();
+		
+		Utils.log(TAG, "offset draglayer-offLeft=%d, offTop=%d", iArrayTempOff[0], iArrayTempOff[1] );
+		Utils.log(TAG, info.toString());
+		
+		flagOcupied(info.cellX, info.cellY, info.cellHSpan, info.cellVSpan);
+		m_Launcher.getDragLayer().updateDragViewToOriPoint(info);
+		
+	}
+	
+	/** temp */
+	private int[] m_iArrayTempCoor = new int[2];
+	/**
+	 * 把左上角的坐标调整为相对于DragLayer绘制层的坐标
+	 * @param coordnates coordnates[0]=left, coordnates[1]=top，要先赋值，返回偏移值
+	 * @param view
+	 */
+	private void adjustToDragLayer(int[] coordnates, View view) {
+		if (view == null) {
+			return;
+		}
+		
+		final DragLayer dragLayer = m_Launcher.getDragLayer();
+		
+		int iOffLeft = 0;
+		int iOffTop = 0;
+		
+		final int[] iArrayTempCoor = m_iArrayTempCoor; 
+		view.getLocationOnScreen(iArrayTempCoor);
+		
+		iOffLeft = iArrayTempCoor[0] - dragLayer.getLeft();
+		iOffTop = iArrayTempCoor[1] - dragLayer.getTop();
+		
+		coordnates[0] += iOffLeft;
+		coordnates[1] += iOffTop;
 	}
 	
 	/**
@@ -514,6 +594,8 @@ public class CellLayout extends ViewGroup {
 					return false;
 				}
 				
+				dragObjectInfo.itemView = cellInfo.getView();
+				
 				//可以完全映射
 				dragObjectInfo.cellX = iOffLeftArea;
 				dragObjectInfo.cellY = iOffTopArea;
@@ -595,8 +677,8 @@ public class CellLayout extends ViewGroup {
 			
 		}
 		
-		debugBooleanArray();
-		Utils.log(true, TAG, "%s", info.toString());
+//		debugBooleanArray();
+//		Utils.log(true, TAG, "%s", info.toString());
 		
 		return r;
 	}
@@ -622,6 +704,72 @@ public class CellLayout extends ViewGroup {
 		}
 		
 		Utils.log(TAG, sb.toString());
+	}
+	
+	/**
+	 * 当释放拖动的View时，保存的一些绘制信息
+	 * (1) DragView平滑回到原来位置的信息
+	 * (2)
+	 * (3)
+	 * @author baoxing
+	 *
+	 */
+	static class DropObjectInfo {
+		/** 释放时的屏幕坐标值 */
+		public int finalX, finalY;
+		
+		/** 原来Item View 的屏幕坐标值，更扩展的正确说法是相对于DragLayer */
+		public int originX, originY;
+		
+		/** 动画过程中的坐标值top, left */
+		public int curX, curY;
+		
+		/** 拖动的View */
+		public DragView dragView;
+		
+		/**Item View */
+		public View itemView;
+		
+		/** 格子位置*/
+		public int cellX, cellY;
+		
+		/** 格子大小 */
+		public int cellHSpan, cellVSpan;
+
+		/** 是否需要绘制 */
+		public boolean isInvalid;
+		
+		/** 动画效果是否完成 */
+		public boolean isAnimFinished;
+		
+		/** 是否可以放置 */
+		public boolean canDrop;
+		
+		public void init() {
+			isInvalid = true;
+			isAnimFinished = false;
+		}
+		
+		public void animEnd() {
+			isInvalid = false;
+			isAnimFinished = true;
+		}
+		
+		public void reset() {
+			isInvalid = false;
+			isAnimFinished = false;
+		}
+		
+		@Override
+		public String toString() {
+			return "DropObjectInfo [finalX=" + finalX + ", finalY=" + finalY
+					+ ", originX=" + originX + ", originY=" + originY
+					+ ", dragView=" + dragView + ", itemView=" + itemView
+					+ ", cellX=" + cellX + ", cellY=" + cellY + ", cellHSpan="
+					+ cellHSpan + ", cellVSpan=" + cellVSpan + "]";
+		}
+		
+		
 	}
 	
 	/**
@@ -651,6 +799,9 @@ public class CellLayout extends ViewGroup {
 		
 		/** 记录那些单元格被占用了, int[0]=cellX, int[1]=cellY */
 		public List<int[]> flagOcupiedList = new ArrayList<int[]>();
+		
+		/** item view */
+		public View itemView;
 		
 		public void reset() {
 			isInvalid = false;

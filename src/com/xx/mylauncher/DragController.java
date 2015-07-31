@@ -154,7 +154,6 @@ public class DragController {
 			m_Launcher.getWorkspace().getCurScreen().clearFlagsOcupied(cellInfo.getCellX(), 
 					cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan());		
 		}
-	
 		
 		m_Vibrator.vibrate(VIBRATE_DURATION);
 		DragView dragView = m_DragViewCur = new DragView(m_Context, b, m_Launcher, screenX, screenY, m_iRawX, m_iRawY);
@@ -366,7 +365,7 @@ public class DragController {
 			if (m_DropTargetLast != null) {
 				m_DropTargetLast.onDragExit(m_DragSource, m_iArrayCoordinatesTemp[0], m_iArrayCoordinatesTemp[1], m_iOffItemViewX, m_iOffItemViewY, m_DragViewCur, m_DragViewCur.getTag() );
 				if (m_DragSource != null) {
-					m_DragSource.onDropCompleted(null, m_DragViewCur, m_DragViewCur.getTag(), false);
+					m_DragSource.onDropCompleted(null, m_DragViewCur, m_DragViewCur.getTag(), m_iRawX, m_iRawY, m_iArrayCoordinatesTemp[0], m_iArrayCoordinatesTemp[1], false);
 				}
 			}
 			
@@ -387,9 +386,10 @@ public class DragController {
 			l.onDragEnd();
 		}
 		
-		if (m_DragViewCur != null) {
+		//参考解释看DragView的remove方法
+/*		if (m_DragViewCur != null) {
 			m_DragViewCur.remove();
-		}
+		}*/
 		
 	}
 
@@ -399,6 +399,7 @@ public class DragController {
 		final int[] coordinates = m_iArrayCoordinatesTemp;
 		final DropTarget findDropTarget = findDropTarget(rawX, rawY, coordinates);
 		
+		//是否可以放置
 		boolean bIsDrop = false;
 		
 		if (findDropTarget != null) {
@@ -412,7 +413,7 @@ public class DragController {
 			
 		}
 		
-		m_DragSource.onDropCompleted((View)findDropTarget, m_DragViewCur, m_DragViewCur.getTag(), bIsDrop);
+		m_DragSource.onDropCompleted((View)findDropTarget, m_DragViewCur, m_DragViewCur.getTag(), rawX, rawY, coordinates[0], coordinates[1], bIsDrop);
 		
 		return bIsDrop;
 	}

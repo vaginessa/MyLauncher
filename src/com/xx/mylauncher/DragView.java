@@ -35,6 +35,8 @@ public class DragView extends View {
 	
 	private Paint m_Paint;
 	
+	private Bitmap m_ViewBitmap;
+	
 	/** 状态栏高度 */
 	private int m_iStatusHeight;
 	
@@ -48,6 +50,7 @@ public class DragView extends View {
 		m_iViewWidth = bitmap.getWidth();
 		m_iViewHeight = bitmap.getHeight();				
 		
+		m_ViewBitmap = Bitmap.createBitmap(bitmap);
 		
 		initRes(context);
 		
@@ -107,9 +110,28 @@ public class DragView extends View {
 	
 	public void remove() {
 		if (m_DragLayer != null) {
-			m_DragLayer.removeView(this);
+//			m_DragLayer.removeView(this);	//不要在这里处理，交给onDropComplete回调函数处理
+																		//可能会发生动画没有结束，但已经remove掉的情况
 		}
 	}
+	
+	public Bitmap getViewBitmap() {
+		return m_ViewBitmap;
+	}
+	
+	public void clearResource() {
+		if (m_ViewBitmap != null) {
+			m_ViewBitmap.recycle();
+			m_ViewBitmap = null;
+		}
+	}
+	
+	@Override
+	protected void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		clearResource();
+	}
+	
 	
 	
 	

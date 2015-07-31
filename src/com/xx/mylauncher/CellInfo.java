@@ -21,7 +21,7 @@ public class CellInfo {
 		SHORT_CUT, WIDGET
 	}
 
-	/** 代表的View */
+	/** 代表的Item View */
 	private View view;
 
 	/** Intent信息 */

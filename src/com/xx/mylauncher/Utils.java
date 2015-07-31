@@ -2,14 +2,17 @@ package com.xx.mylauncher;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 public class Utils {
 	
 	
 	private static final boolean DEBUG = true;
+	private static final String TAG = "Utils";
 
 	public static void log(String tag, String msg) {
 		if (DEBUG) {
@@ -91,6 +94,50 @@ public class Utils {
      
         return m_iStatusHeight;
     }
+	
+	/**
+	 * 提取View的位图
+	 * @param view
+	 * @return
+	 */
+	public static Bitmap getViewBitmap(View view) {
+		view.clearFocus();
+		view.setPressed(false);
+		
+		boolean willNotCache = view.willNotCacheDrawing();
+		view.setWillNotCacheDrawing(false);
+		
+		//Reset the drawing cache background color to fully transparent
+		//for the duration of this operation
+		int color = view.getDrawingCacheBackgroundColor();
+		float alpha = view.getAlpha();
+		view.setDrawingCacheBackgroundColor(0);	
+		view.setAlpha(1.0f);
+		
+		if (color != 0) {
+			view.destroyDrawingCache();
+			
+		}
+		
+		view.buildDrawingCache();
+		Bitmap cacheBitmap = view.getDrawingCache();
+		if (cacheBitmap == null) {
+			Utils.log(TAG, new RuntimeException(), "failed getViewBitmap(%s)", view.toString() );
+			return null;
+		}
+		
+		Bitmap bitmap = Bitmap.createBitmap(cacheBitmap);
+		
+		//Restore the view
+		view.destroyDrawingCache();
+		view.setAlpha(alpha);
+		view.setWillNotCacheDrawing(willNotCache);
+		view.setDrawingCacheBackgroundColor(color);
+		
+		return bitmap;
+	}
+	
+	
 	
 	
 	

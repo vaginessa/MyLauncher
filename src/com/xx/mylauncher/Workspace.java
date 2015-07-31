@@ -205,12 +205,18 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 	}
 	
 	@Override
-	public void onDropCompleted(View dropTargetView, View dragView,
-			Object itemInfo, boolean success) {
+	public void onDropCompleted(View dropTargetView, View dragView, Object itemInfo, int rawX, int rawY, int iOffX, int iOffy, boolean success) {
 		// TODO Auto-generated method stub
 		Utils.log(TAG, "onDropCompleted");
+		if (m_ListCellLayout.size() <= 0) {
+			return;
+		}
+		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
 		
+		curCellLayout.onDropCompleted(dropTargetView, dragView, itemInfo, rawX, rawY, iOffX, iOffy, success);
 	}
+
+		
 	
 	/*
 	 * 可以放置时调用的函数

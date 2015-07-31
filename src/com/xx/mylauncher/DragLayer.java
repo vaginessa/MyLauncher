@@ -1,6 +1,11 @@
 package com.xx.mylauncher;
 
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.ValueAnimator;
+import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -76,6 +81,18 @@ public class DragLayer extends FrameLayout {
 			}
 		}
 		
+		/*
+		 * DragView滑回指定位置
+		 */
+		if (m_DropObjectInfo != null) {
+			if (m_DropObjectInfo.isInvalid) {
+				int left = m_DropObjectInfo.curX;
+				int top = m_DropObjectInfo.curY;
+
+				canvas.drawBitmap(m_DropObjectInfo.dragView.getViewBitmap(), left, top, null);
+			}
+		}
+		
 		
 	}
 	
@@ -119,6 +136,84 @@ public class DragLayer extends FrameLayout {
 			}
 
 		}
+		
+	}
+	
+	/** 用来处理DragView移动到指定位置的属性动画 */
+	private ValueAnimator m_DragViewAnim;
+	
+	/** 移动的时间 */
+	private static final long DRAGVIEW_SCROLL_TIME = 4000;
+	
+	/** 用来表示DragView移动效果的相关信息 */
+	private CellLayout.DropObjectInfo m_DropObjectInfo;
+	
+	/**
+	 * 当释放DragView时，使DragView平滑移动到所处的位置
+	 * @param info
+	 */
+	public void updateDragViewToOriPoint(final CellLayout.DropObjectInfo info) {
+		if (m_DropObjectInfo != null) {
+			if (!m_DropObjectInfo.isAnimFinished) {
+				m_DragViewAnim.end();
+			}
+		}
+		
+		m_DropObjectInfo = info;
+		
+		if (m_DragViewAnim == null) {
+			m_DragViewAnim = new ValueAnimator();
+			m_DragViewAnim.setDuration(DRAGVIEW_SCROLL_TIME);
+		}
+		m_DragViewAnim.setIntValues(1, 100);
+		m_DragViewAnim.addListener(new AnimatorListener() {
+			
+			@Override
+			public void onAnimationStart(Animator animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animator animation) {
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				if (m_DropObjectInfo.dragView != null) {
+					removeView(m_DropObjectInfo.dragView);
+					m_DropObjectInfo.dragView = null;
+				}
+				
+				m_DropObjectInfo.itemView.setVisibility(View.VISIBLE);
+				m_DropObjectInfo.animEnd();
+				
+				requestLayout();
+			}
+			
+			@Override
+			public void onAnimationCancel(Animator animation) {
+				
+			}
+		});
+		m_DragViewAnim.addUpdateListener(new AnimatorUpdateListener() {
+			
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				int value = (Integer) animation.getAnimatedValue();
+				//这部分的计算应放到TypeE..中去的，但是，这样方便
+				float process = (float)value/(float)100;
+				int allprocessX = m_DropObjectInfo.finalX - m_DropObjectInfo.originX;
+				int alllProcessY = m_DropObjectInfo.finalY - m_DropObjectInfo.originY;
+				int curX = (int) (m_DropObjectInfo.finalX + allprocessX * process);
+				int curY = (int) (m_DropObjectInfo.finalY + alllProcessY * process);
+				m_DropObjectInfo.curX = curX;
+				m_DropObjectInfo.curY = curY;
+				
+				invalidate();	//to call dispatchDraw, simple to clear mind
+			}
+		});
+		m_DragViewAnim.start();
 		
 	}
 	

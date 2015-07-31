@@ -1,6 +1,7 @@
 package com.xx.mylauncher;
 
 import android.graphics.Rect;
+import android.view.ViewParent;
 
 /**
  * 定义拖动目的接口
@@ -87,7 +88,7 @@ public interface DropTarget {
     void getLocationOnScreen(int[] loc);
     int getLeft();
     int getTop();
-    
+    ViewParent getParent();
     
     
 }

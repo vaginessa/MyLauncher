@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="Launcher">
+        <!-- 格子数的X坐标 -->
+        <attr name="cellX" format="integer"/>
+        <!-- 格子数的Y坐标 -->
+        <attr name="cellY" format="integer"/>
+        <!-- 水平占了多少格子数 -->
+        <attr name="cellHSpan" format="integer" />
+        <!-- 垂直占了多少格子数 -->
+        <attr name="cellVSpan" format="integer" />
+        <!-- 水平格子间的空格 -->
+        <attr name="spaceHorizentation" format="dimension"/>
+        <!-- 垂直格子间的空格 -->
+        <attr name="spaceVertical" format="dimension" />
+        <!-- 单元格子的大小 --> 
+        <attr name="cellSize" format="dimension" />
+    </declare-styleable>
+    
+    
+</resources>

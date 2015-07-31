@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.xx.mylauncher.DragLayer xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dragLayout"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    android:background="@android:color/holo_green_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@android:color/transparent" >
+
+        <com.xx.mylauncher.Workspace
+            android:id="@+id/workspace"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent" >
+
+            <com.xx.mylauncher.CellLayout
+                android:id="@+id/celllayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                launcher:cellSize="78dp" >
+
+                <!--
+                 <View
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_green_dark"
+                launcher:cellHSpan="1"
+                launcher:cellVSpan="1"
+                launcher:cellX="0"
+                launcher:cellY="0" />
+              
+                            <View
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_orange_light"
+                launcher:cellHSpan="1"
+                launcher:cellVSpan="1"
+                launcher:cellX="1"
+                launcher:cellY="4" />
+
+                                          <View
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_orange_light"
+                launcher:cellHSpan="1"
+                launcher:cellVSpan="1"
+                launcher:cellX="2"
+                launcher:cellY="4" />
+                                          
+                                                        <View
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_orange_light"
+                launcher:cellHSpan="1"
+                launcher:cellVSpan="1"
+                launcher:cellX="3"
+                launcher:cellY="4" />
+                -->
+
+            </com.xx.mylauncher.CellLayout>
+        </com.xx.mylauncher.Workspace>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/btnAdd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onAddView"
+                android:text="add View" />
+
+            <EditText
+                android:id="@+id/edt_cellX"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:text="1" />
+
+            <EditText
+                android:id="@+id/edt_cellY"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:text="1" />
+        </LinearLayout>
+    </LinearLayout>
+
+</com.xx.mylauncher.DragLayer>

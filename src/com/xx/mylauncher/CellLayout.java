@@ -446,7 +446,7 @@ public class CellLayout extends ViewGroup {
 		
 		if (subStatus) {
 			int iStatusHeight = Utils.getStatusHeight(context);
-			coordnates[1] += iStatusHeight;
+			coordnates[1] -= iStatusHeight;
 		}
 	}
 	
@@ -466,7 +466,7 @@ public class CellLayout extends ViewGroup {
 				lp.cellY = m_DragObjectInfo.cellY;
 				lp.cellHSpan = m_DragObjectInfo.cellHSpan;
 				lp.cellVSpan = m_DragObjectInfo.cellVSpan;
-				itemView.setVisibility(View.VISIBLE);
+//				itemView.setVisibility(View.VISIBLE);		//TODO 是否统一下，这类的操作都放到onDropComplete中去呢
 				
 				//设置占用的格子
 				for (int ti=lp.cellY; ti<=lp.cellY+lp.cellVSpan-1; ti++) {
@@ -475,7 +475,7 @@ public class CellLayout extends ViewGroup {
 					}
 				}
 				
-				requestLayout();
+//				requestLayout();
 			}
 		}
 	}
@@ -732,7 +732,7 @@ public class CellLayout extends ViewGroup {
 		/** 释放时的屏幕坐标值 */
 		public int finalX, finalY;
 		
-		/** 原来Item View 的屏幕坐标值，更扩展的正确说法是相对于DragLayer */
+		/** 放置Item View 的屏幕坐标值，更扩展的正确说法是相对于DragLayer */
 		public int originX, originY;
 		
 		/** 动画过程中的坐标值top, left */
@@ -817,11 +817,16 @@ public class CellLayout extends ViewGroup {
 		/** item view */
 		public View itemView;
 		
+		
 		public void reset() {
 			isInvalid = false;
 			canDrop = false;
 			isInCell = false;
 			flagOcupiedList.clear();
+		}
+		
+		public void updateIsValid() {
+			isInvalid = false;
 		}
 
 		@Override

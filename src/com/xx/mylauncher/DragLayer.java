@@ -31,6 +31,7 @@ public class DragLayer extends FrameLayout {
 
 	/** 测试用 */
 	private Paint m_PaintTemp;
+	private Paint m_PaintTemp1;
 	
 	public DragLayer(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -53,6 +54,9 @@ public class DragLayer extends FrameLayout {
 		m_PaintTemp.setStyle(Paint.Style.STROKE);
 		m_PaintTemp.setStrokeWidth(3);
 		m_PaintTemp.setColor(Color.BLUE);
+		m_PaintTemp1 = new Paint();
+		m_PaintTemp1.setAlpha(130);
+		m_PaintTemp1.setStyle(Paint.Style.FILL);
 	}
 
 	//在这里绘制一些辅助效果
@@ -64,6 +68,7 @@ public class DragLayer extends FrameLayout {
 		 * 更新在拖动时的辅助信息，比如拖动到哪的可以预绘制的边框，不可以放置时的红色蒙板提醒
 		 */
 		if (m_DragObjectInfo != null) {
+			
 			if (m_DragObjectInfo.isInvalid) {
 				//只先测试可以放置的效果
 				if (m_DragObjectInfo.canDrop) {
@@ -92,6 +97,17 @@ public class DragLayer extends FrameLayout {
 				canvas.drawBitmap(m_DropObjectInfo.dragView.getViewBitmap(), left, top, null);
 			}
 		}
+		
+		/*
+		 * 绘制最后要放置的地方的预览图，推荐的是DragView的Bitmap，和拖动时一样
+		 */
+		if (m_DropObjectInfo!=null && m_DropObjectInfo.isInvalid && !m_DropObjectInfo.isAnimFinished) {
+			int left = m_DropObjectInfo.originX;
+			int top = m_DropObjectInfo.originY;
+			canvas.drawBitmap(m_DropObjectInfo.dragView.getViewBitmap(), left, top, m_PaintTemp1);
+			
+		}
+		
 		
 		
 	}
@@ -143,7 +159,7 @@ public class DragLayer extends FrameLayout {
 	private ValueAnimator m_DragViewAnim;
 	
 	/** 移动的时间 */
-	private static final long DRAGVIEW_SCROLL_TIME = 4000;
+	private static final long DRAGVIEW_SCROLL_TIME = 500;
 	
 	/** 用来表示DragView滑动效果的相关信息 */
 	private CellLayout.DropObjectInfo m_DropObjectInfo;
@@ -170,7 +186,8 @@ public class DragLayer extends FrameLayout {
 			
 			@Override
 			public void onAnimationStart(Animator animation) {
-				
+				m_DropObjectInfo.dragView.setVisibility(View.INVISIBLE);
+
 			}
 			
 			@Override
@@ -184,10 +201,9 @@ public class DragLayer extends FrameLayout {
 					removeView(m_DropObjectInfo.dragView);
 					m_DropObjectInfo.dragView = null;
 				}
-				
 				m_DropObjectInfo.itemView.setVisibility(View.VISIBLE);
 				m_DropObjectInfo.animEnd();
-				
+				m_DragObjectInfo.reset();
 				requestLayout();
 			}
 			

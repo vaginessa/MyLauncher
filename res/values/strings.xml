@@ -5,4 +5,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
+    <string name="launcher_dailog_sel_title">请选择</string>
+    <string name="launcher_no_much_space">当前屏幕没有足够的空间</string>
+    
 </resources>

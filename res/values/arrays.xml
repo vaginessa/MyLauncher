@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="launcher_itemdialog_content">
+        <item >应用程序</item>
+        <item >桌面小部件</item>
+    </string-array>
+    
+</resources>

@@ -22,9 +22,9 @@ import android.view.WindowManager;
  */
 public class CellLayout extends ViewGroup {
 	
-	/** 格子默认的大小 50dp */
+	/** 格子默认的大小 78dp */
 	private  int Cell_Size_Default;
-	private static final int CELL_SIZE_DEFAULT = 50;
+	private static final int CELL_SIZE_DEFAULT = 78;
 	
 	/** 格子默认的间隔 */
 	private int Space_Default;

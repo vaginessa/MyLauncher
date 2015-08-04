@@ -5,8 +5,10 @@ import java.util.Collections;
 import java.util.List;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 
 /**
  * 应用程序信息相关业务类
@@ -104,15 +106,37 @@ public class AppManager {
 	private AppInfo getAppInfo(ApplicationInfo app, PackageManager pm) {
 		AppInfo appInfo = new AppInfo();
 		CharSequence labelName = app.loadLabel(pm);
-		
+		String clsName = getClsName(app.packageName, pm);
 		if (labelName == null) {
-			labelName = "null";	//这里有个大的问题，就是没想到方法获取主入口的clsName TODO
+			labelName = clsName;
 		}
 		appInfo.setLabelName((String)labelName);
 		appInfo.setIcon(app.loadIcon(pm) );
 		appInfo.setPkgName(app.packageName);
-//		appInfo.setClsName(clsName);	//TODO
+		appInfo.setClsName(clsName);	
 		return appInfo;
+	}
+	
+	/**
+	 * 根据包名获取主类名
+	 * @param packageName
+	 * @return
+	 */
+	private String getClsName(final String packageName, final PackageManager pm) {
+		String clsName = "";
+		
+		Intent intent = new Intent(Intent.ACTION_MAIN, null);
+		intent.addCategory(Intent.CATEGORY_LAUNCHER);
+		intent.setPackage(packageName);
+		List<ResolveInfo> infoList = pm.queryIntentActivities(intent, 0);
+		if (infoList!=null && infoList.size()>0) {
+			ResolveInfo info = infoList.get(0);
+			if (info != null) {
+				clsName = info.activityInfo.name;
+			}
+		}
+		
+		return clsName;
 	}
 	
 	public List<AppInfo> getApp(int filter) {

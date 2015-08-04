@@ -24,7 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements View.OnLongClickListener {
+public class MainActivity extends Activity implements View.OnLongClickListener, View.OnClickListener {
 	
 	private static final String TAG = "MainActivity";
 	
@@ -62,20 +62,6 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		m_WidgetManager = WidgetManager.getInstance(this, this);
 	}
 
-	public void onAddView(View view) {
-		EditText edtCellX = (EditText) findViewById(R.id.edt_cellX);
-		EditText edtCellY = (EditText) findViewById(R.id.edt_cellY);
-		int cellHSpan = Integer.parseInt(edtCellX.getText().toString());
-		int cellVSpan = Integer.parseInt(edtCellY.getText().toString());
-		List<int[]> result = m_CellLayout.isAcceptAddChild(cellHSpan, cellVSpan);
-		
-		if (result.size() > 0) {
-			int[] item = result.get(new Random().nextInt(result.size()));
-			addViewInCellLayout(item[0], item[1], cellHSpan, cellVSpan);
-		}
-
-	}
-	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -139,7 +125,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		cellInfo.setCellX(cellX);
 		cellInfo.setCellY(cellY);
 		cellInfo.setIconName(appInfo.getLabelName());
-//		cellInfo.setIntent(appInfo.getIntent());	//TODO 这里暂时时错误的
+		cellInfo.setIntent(appInfo.getIntent());
 		cellInfo.setType(CellInfo.CellType.SHORT_CUT);
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
@@ -151,7 +137,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		view.setLayoutParams(lp);
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
-		
+		view.setOnClickListener(this);
 		m_CellLayout.addView(view);
 	}
 	
@@ -289,6 +275,19 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		
 		return false;
 	}
+	
+	
+	@Override
+	public void onClick(View v) {
+		Object object = v.getTag();
+		if (object instanceof CellInfo) {
+			CellInfo cellInfo = (CellInfo) object;
+			Utils.safetyStartActivity(cellInfo.getIntent(), this);
+		}
+		
+	} 
+	
+	
 	
 	/** 选择哪种类型的item 对话框 */
 	private AlertDialog m_DialogSelItem;
@@ -457,7 +456,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 			
 		}
 		
-	} 
+	}
+
 	
 	
 	

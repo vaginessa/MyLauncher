@@ -104,7 +104,7 @@ public class WidgetManager {
 		int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
 		AppWidgetProviderInfo appWiddget = m_AppWidgetManager.getAppWidgetInfo(appWidgetId);
 		
-		Utils.toast(m_Launcher, TAG, "configure:"+appWiddget.configure);
+		Utils.log( TAG, "configure:"+appWiddget.configure);
 		
 		if (appWiddget.configure != null) {
 			Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);

@@ -97,12 +97,9 @@ containing a value of this type.
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f090009;
-        public static final int btnAdd=0x7f090006;
+        public static final int action_settings=0x7f090006;
         public static final int celllayout=0x7f090005;
         public static final int dragLayout=0x7f090003;
-        public static final int edt_cellX=0x7f090007;
-        public static final int edt_cellY=0x7f090008;
         public static final int gridview=0x7f090002;
         public static final int image_button=0x7f090000;
         public static final int txv_label=0x7f090001;

@@ -1,7 +1,9 @@
 package com.xx.mylauncher;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.util.Log;
@@ -137,8 +139,25 @@ public class Utils {
 		return bitmap;
 	}
 	
-	
-	
+	/**
+	 * 安全启动应用程序
+	 * @param intent
+	 * @return true，启动成功
+	 */
+	public static boolean safetyStartActivity(Intent intent, Context context) {
+		boolean result = false;
+		try {
+			result = true;
+			context.startActivity(intent);
+		} catch (ActivityNotFoundException e) {
+			e.printStackTrace();
+			result =false;
+			log(TAG, "找不到该应用程序");
+			Toast.makeText(context, "找不到该应用程序", Toast.LENGTH_SHORT).show();
+		}
+		
+		return result;
+	}
 	
 	
 }

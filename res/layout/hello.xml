@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" xmlns:launcher="http://schemas.android.com/apk/res/com.xx.mylauncher"
+    android:background="#6f000000">
+
+    <com.xx.mylauncher.SlideIndicator 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"	
+        launcher:numbers="5"
+        launcher:radius="10dp"
+        launcher:background_color="#CDC9C9"
+        launcher:foreground_color="@android:color/white"
+        launcher:space="10dp"	/>
+
+</LinearLayout>

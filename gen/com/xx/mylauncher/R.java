@@ -12,6 +12,13 @@ public final class R {
         public static final int launcher_itemdialog_content=0x7f040000;
     }
     public static final class attr {
+        /**  圆圈的背景色 
+         <p>May be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+<p>May be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+         */
+        public static final int background_color=0x7f010009;
         /**  水平占了多少格子数 
          <p>Must be an integer value, such as "<code>100</code>".
 <p>This may also be a reference to a resource (in the form
@@ -59,6 +66,44 @@ theme attribute (in the form
 containing a value of this type.
          */
         public static final int cellY=0x7f010001;
+        /**  圆圈的前景色 
+         <p>May be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+<p>May be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+         */
+        public static final int foreground_color=0x7f01000a;
+        /**  圆圈个数 
+         <p>Must be an integer value, such as "<code>100</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int numbers=0x7f010007;
+        /**  圆圈的半径 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int radius=0x7f010008;
+        /**  圆圈间的间隔 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int space=0x7f01000b;
         /**  水平格子间的空格 
          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
 Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
@@ -110,9 +155,10 @@ containing a value of this type.
         public static final int appwidget_error=0x7f030001;
         public static final int dialog_appitem_gridview_item=0x7f030002;
         public static final int dialog_appitem_view=0x7f030003;
-        public static final int launcher=0x7f030004;
-        public static final int layout_launcher_item=0x7f030005;
-        public static final int tt=0x7f030006;
+        public static final int hello=0x7f030004;
+        public static final int launcher=0x7f030005;
+        public static final int layout_launcher_item=0x7f030006;
+        public static final int tt=0x7f030007;
     }
     public static final class menu {
         public static final int main=0x7f080000;
@@ -297,5 +343,107 @@ containing a value of this type.
           @attr name com.xx.mylauncher:spaceVertical
         */
         public static final int Launcher_spaceVertical = 5;
+        /**  定义多屏指示的自定义属性 
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #SlideIndicator_background_color com.xx.mylauncher:background_color}</code></td><td> 圆圈的背景色 </td></tr>
+           <tr><td><code>{@link #SlideIndicator_foreground_color com.xx.mylauncher:foreground_color}</code></td><td> 圆圈的前景色 </td></tr>
+           <tr><td><code>{@link #SlideIndicator_numbers com.xx.mylauncher:numbers}</code></td><td> 圆圈个数 </td></tr>
+           <tr><td><code>{@link #SlideIndicator_radius com.xx.mylauncher:radius}</code></td><td> 圆圈的半径 </td></tr>
+           <tr><td><code>{@link #SlideIndicator_space com.xx.mylauncher:space}</code></td><td> 圆圈间的间隔 </td></tr>
+           </table>
+           @see #SlideIndicator_background_color
+           @see #SlideIndicator_foreground_color
+           @see #SlideIndicator_numbers
+           @see #SlideIndicator_radius
+           @see #SlideIndicator_space
+         */
+        public static final int[] SlideIndicator = {
+            0x7f010007, 0x7f010008, 0x7f010009, 0x7f01000a,
+            0x7f01000b
+        };
+        /**
+          <p>
+          @attr description
+           圆圈的背景色 
+
+
+          <p>May be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+<p>May be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:background_color
+        */
+        public static final int SlideIndicator_background_color = 2;
+        /**
+          <p>
+          @attr description
+           圆圈的前景色 
+
+
+          <p>May be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+<p>May be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
+"<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:foreground_color
+        */
+        public static final int SlideIndicator_foreground_color = 3;
+        /**
+          <p>
+          @attr description
+           圆圈个数 
+
+
+          <p>Must be an integer value, such as "<code>100</code>".
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:numbers
+        */
+        public static final int SlideIndicator_numbers = 0;
+        /**
+          <p>
+          @attr description
+           圆圈的半径 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:radius
+        */
+        public static final int SlideIndicator_radius = 1;
+        /**
+          <p>
+          @attr description
+           圆圈间的间隔 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:space
+        */
+        public static final int SlideIndicator_space = 4;
     };
 }

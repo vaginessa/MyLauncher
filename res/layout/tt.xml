@@ -32,8 +32,21 @@
         </com.xx.mylauncher.Workspace>
 
 	<!-- 滑动指示 -->
+	    <com.xx.mylauncher.SlideIndicator 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"	
+        launcher:numbers="5"
+        launcher:radius="10dp"
+        launcher:background_color="#CDC9C9"
+        launcher:foreground_color="@android:color/white"
+        launcher:space="10dp"	/>
+	
 	
 	<!-- HotSeat  -->
+	
+	
+	
+	
         
     </LinearLayout>
 

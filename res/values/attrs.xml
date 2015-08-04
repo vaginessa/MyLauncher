@@ -17,5 +17,19 @@
         <attr name="cellSize" format="dimension" />
     </declare-styleable>
     
+    <!-- 定义多屏指示的自定义属性 -->
+    <declare-styleable name="SlideIndicator">
+        <!-- 圆圈个数 -->
+        <attr name="numbers" format="integer" />
+        <!-- 圆圈的半径 -->
+        <attr name="radius" format="dimension" />
+        <!-- 圆圈的背景色 -->
+        <attr name="background_color" format="reference|color" />
+        <!-- 圆圈的前景色 -->
+        <attr name="foreground_color" format="reference|color" />
+        <!-- 圆圈间的间隔 -->
+        <attr name="space" format="dimension" />
+        
+    </declare-styleable>
     
 </resources>

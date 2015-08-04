@@ -1,5 +1,9 @@
 package com.xx.mylauncher;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
+import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -49,8 +53,19 @@ public class SlideIndicator extends View {
 	
 	private int m_iScreenHeight;
 	
+	private ValueAnimator m_ValueAnimator;
+	/** 是否启用动画 */
+	private boolean m_bIsAnim = false;;
+	/** 当启动动画时{@link #m_bIsAnim}，该值表示动画中的圆圈的x坐标 */
+	private float m_fCurX;
+	/** 滑动的动画时间 */
+	private static final long ANIMATOR_DURATION = 500;
+	
 	/** 当前指示的是第几个 */
 	private int m_iCurInditor = 0;
+	
+	/** 上一次指示的是第几个 */
+	private int m_iLastInditor = 0;
 	
 	public SlideIndicator(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -91,6 +106,8 @@ public class SlideIndicator extends View {
 		m_paintFg.setStyle(Paint.Style.FILL);
 		m_paintFg.setColor(m_iFgColor);
 		m_paintFg.setDither(true);
+		
+		m_ValueAnimator = new ValueAnimator();
 	}
 	
 	@Override
@@ -143,26 +160,103 @@ public class SlideIndicator extends View {
 		canvas.drawColor(Color.TRANSPARENT);	//透明
 		
 		int iMidHeight = m_iHeight / 2;
+	
+		for (int i=0; i<m_iNumbers; i++) {
+			canvas.drawCircle(getDrawStartX(i), iMidHeight, m_iRadius, m_PaintBg);
+		}
+		
+		if (!m_bIsAnim) {
+			canvas.drawCircle(getDrawStartX(m_iCurInditor), iMidHeight, m_iRadius, m_paintFg);
+		} else {
+			canvas.drawCircle(m_fCurX, iMidHeight, m_iRadius, m_paintFg);
+		}
+		
+	}
+	
+	/**
+	 * 根据第几个位置，返回它的绘画开始点，x坐标
+	 * @param position
+	 * @return
+	 */
+	private float getDrawStartX(int position) {
+		final int iNumbers = m_iNumbers;
 		int iMidWidht = m_iWidth /2;
 		int iStartX;
 		int iHalfNums;
-		if (m_iNumbers % 2 == 0) {
-			iHalfNums = m_iNumbers / 2;
+		if (iNumbers % 2 == 0) {
+			iHalfNums = iNumbers / 2;
 			iStartX = iMidWidht - m_iSpace /2 - iHalfNums*2*m_iRadius - (iHalfNums-1)*m_iSpace + m_iRadius;
 		} else {
-			iHalfNums = (m_iNumbers-1) / 2;
+			iHalfNums = (iNumbers-1) / 2;
 			iStartX = iMidWidht - m_iRadius - iHalfNums*2*m_iRadius - iHalfNums*m_iSpace + m_iRadius;
 		}
 		
 		int iUnitSpace = m_iRadius*2 + m_iSpace;
-		for (int i=0; i<m_iNumbers; i++) {
-			if (i == m_iCurInditor) {
-				canvas.drawCircle(iStartX+i*iUnitSpace, iMidHeight, m_iRadius, m_paintFg);
-				continue;
-			}
-			canvas.drawCircle(iStartX+i*iUnitSpace, iMidHeight, m_iRadius, m_PaintBg);
+		
+		float result = iStartX + position*iUnitSpace;
+		
+		return result;
+	}
+	
+	
+	/**
+	 * 设置当前指示的第几个，在UI线程中调用
+	 * @param m_iCurInditor	当前指示的是第几个
+	 * @param isAnim	是否启动动画平滑
+	 */
+	public void setCurInditor(int m_iCurInditor, boolean isAnim) {
+		m_iLastInditor = m_iCurInditor;
+		this.m_iCurInditor = m_iCurInditor;
+		updateIndicator(isAnim);
+	}
+	
+	/**
+	 * 更新控件
+	 * @param isAnim
+	 */
+	private void updateIndicator(boolean isAnim) {
+		if (!isAnim) {
+			invalidate();
+			return;
 		}
 		
+		if (m_ValueAnimator.isRunning()) {
+			m_ValueAnimator.cancel();
+		}
+		
+		m_ValueAnimator.setFloatValues(1, 100);
+		m_ValueAnimator.setDuration(ANIMATOR_DURATION);
+		m_ValueAnimator.addListener(new AnimatorListenerAdapter() {
+			@Override
+			public void onAnimationCancel(Animator animation) {
+				super.onAnimationCancel(animation);
+			}
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				super.onAnimationEnd(animation);
+				m_bIsAnim = false;
+			}
+			@Override
+			public void onAnimationStart(Animator animation) {
+				super.onAnimationStart(animation);
+				m_bIsAnim = true;
+			}
+		});
+		m_ValueAnimator.addUpdateListener(new AnimatorUpdateListener() {
+			
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				float fProcess = (Float) animation.getAnimatedValue();
+				final float fOrigin = getDrawStartX(m_iLastInditor);
+				final float fFinal = getDrawStartX(m_iCurInditor);
+				final float fTotal = fFinal - fOrigin;
+				m_fCurX = fOrigin + fProcess * fTotal;
+				
+				invalidate();
+			}
+		});
+		
+		m_ValueAnimator.start();
 	}
 
 	public int getM_iNumbers() {
@@ -223,14 +317,6 @@ public class SlideIndicator extends View {
 		return m_iCurInditor;
 	}
 
-	/**
-	 * 设置当前指示的第几个
-	 * @param m_iCurInditor
-	 */
-	public void setM_iCurInditor(int m_iCurInditor) {
-		this.m_iCurInditor = m_iCurInditor;
-		invalidate();
-	}
 
 	
 }

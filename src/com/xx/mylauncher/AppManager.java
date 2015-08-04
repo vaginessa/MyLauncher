@@ -8,6 +8,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
+/**
+ * 应用程序信息相关业务类
+ * @author baoxing
+ *
+ */
 public class AppManager {
 
 	private static AppManager m_AppManager;

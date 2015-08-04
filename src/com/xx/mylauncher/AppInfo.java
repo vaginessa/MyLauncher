@@ -4,6 +4,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 
+/**
+ * 应用程序信息实体类
+ * @author baoxing
+ *
+ */
 public class AppInfo {
 	
 	/** 应用程序标签名 */

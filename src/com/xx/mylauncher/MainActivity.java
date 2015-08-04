@@ -6,11 +6,14 @@ import java.util.Random;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -35,6 +38,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 	
 	private AppManager m_AppManager;
 
+	private WidgetManager m_WidgetManager;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -54,7 +59,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		
 		
 		m_AppManager = AppManager.getInstance(this);
-		
+		m_WidgetManager = WidgetManager.getInstance(this, this);
 	}
 
 	public void onAddView(View view) {
@@ -69,6 +74,30 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 			addViewInCellLayout(item[0], item[1], cellHSpan, cellVSpan);
 		}
 
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (m_WidgetManager != null) {
+			m_WidgetManager.onResume();
+		}
+		
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (m_WidgetManager != null) {
+			m_WidgetManager.onStop();
+		}
+	}
+	
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		System.exit(0);
 	}
 	
 	/**
@@ -126,6 +155,70 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		m_CellLayout.addView(view);
 	}
 	
+	/**
+	 * 添加Widget到Launcher中
+	 * @param widgetView
+	 */
+	private void addWidgetInCellLayout(final View widgetView, final AppWidgetProviderInfo info, int cellX, int cellY, int cellHSpan, int cellVSpan) {
+		CellInfo cellInfo = new CellInfo();
+		cellInfo.setCellHSpan(cellHSpan);
+		cellInfo.setCellHSpan(cellHSpan);
+		cellInfo.setCellVSpan(cellVSpan);
+		cellInfo.setCellX(cellX);
+		cellInfo.setCellY(cellY);
+		cellInfo.setIconName("");
+		cellInfo.setType(CellInfo.CellType.WIDGET);
+		cellInfo.setView(widgetView);
+		widgetView.setTag(cellInfo);
+		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
+		lp.cellX = cellX;
+		lp.cellY = cellY;
+		lp.cellHSpan = cellHSpan;
+		lp.cellVSpan = cellVSpan;
+		widgetView.setLayoutParams(lp);
+//		widgetView.setFocusable(true);
+		widgetView.setOnLongClickListener(this);
+		
+		m_CellLayout.addView(widgetView);
+	}
+	
+	
+	void addViewInScreen(final View widgetView, final AppWidgetProviderInfo info) {
+		final int iCellSize = m_CellLayout.getCellSize();
+		final int iHSpace = m_CellLayout.getHorizontalSpace();
+		final int iVSpace = m_CellLayout.getVerticalSpace();
+		final int iWidth = info.minWidth;
+		final int iHeight = info.minHeight;
+		
+//		final DisplayMetrics dm = new DisplayMetrics();		这样写是不对的
+		final DisplayMetrics dm = this.getResources().getDisplayMetrics();
+		final int iUnitSize  = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, dm);
+		final int iOffSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, dm); 
+//		Utils.toast(this, "iUnitSize=%d, iOffSize=%d", iUnitSize, iOffSize);
+		/*
+		 * 经测试，这是对的即要符合规范，即widget中的大小
+		 * size = 70dp * 格子数 - 30dp
+		 */
+		int iHSpan = (int) Math.ceil( (iWidth+iOffSize) / iUnitSize);	
+		int iVSpan = (int ) Math.ceil( (iHeight+iOffSize) / iUnitSize);
+		
+		
+		List<int[]> result = m_CellLayout.isAcceptAddChild(iHSpan, iVSpan);
+		
+		if (result.size() > 0) {
+			int[] item = result.get(new Random().nextInt(result.size()) );
+			addWidgetInCellLayout(widgetView, info, item[0], item[1], iHSpan, iVSpan);
+		} else {
+			Toast.makeText(MainActivity.this, getResources().getString(R.string.launcher_no_much_space), Toast.LENGTH_SHORT).show();
+		}
+		
+		Utils.log(TAG, "添加的Widget: iHSpan=%d, iVSpan=%d", iHSpan, iVSpan);
+	}
+	
+	
+	
+	
+	
 	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan) {
 		View v = new View(this);
 		CellInfo cellInfo = new CellInfo();
@@ -151,7 +244,19 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 		
 		m_CellLayout.addView(v);
 	}
-
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		Utils.log(TAG, "requestCode=%d, resultCode=%d", requestCode, resultCode);
+		Utils.log(TAG, "m_WidgetManager=%s", m_WidgetManager==null?"null":"not null");
+		if (m_WidgetManager != null) {
+			m_WidgetManager.onActivityResult(requestCode, resultCode, data);
+		}
+		
+	}
+	
+	
 	@Override
 	public boolean onLongClick(View v) {
 		// TODO Auto-generated method stub
@@ -212,7 +317,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener {
 					if (which == 0) { //应用程序
 						showAppItemDialog(context);
 					} else if ( which == 1) {	//widget
-						
+						m_WidgetManager.selectWidgets();
 					}
 				}
 				

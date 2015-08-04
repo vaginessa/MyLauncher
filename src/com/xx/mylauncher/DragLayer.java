@@ -201,9 +201,10 @@ public class DragLayer extends FrameLayout {
 					removeView(m_DropObjectInfo.dragView);
 					m_DropObjectInfo.dragView = null;
 				}
-				m_DropObjectInfo.itemView.setVisibility(View.VISIBLE);
+		
 				m_DropObjectInfo.animEnd();
-				m_DragObjectInfo.reset();
+				m_DropObjectInfo.itemView.setVisibility(View.VISIBLE);
+				
 				requestLayout();
 			}
 			

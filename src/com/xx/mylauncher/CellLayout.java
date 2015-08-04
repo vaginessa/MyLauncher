@@ -702,6 +702,29 @@ public class CellLayout extends ViewGroup {
 		m_Launcher = launcher;
 	}
 	
+	/**
+	 * 返回格子的大小
+	 * @return
+	 */
+	public int getCellSize() {
+		return m_iCellSize;
+	}
+	
+	/**
+	 * 返回格子水平的间隔大小
+	 * @return
+	 */
+	public int getHorizontalSpace() {
+		return m_iSpaceHorizatation;
+	}
+	
+	/**
+	 * 返回格子垂直的间隔大小
+	 * @return
+	 */
+	public int getVerticalSpace() {
+		return m_iSpaceVertical;
+	}
 	
 	private void debugBooleanArray() {
 		final boolean[][] bArray = m_bCellsOcupied;

@@ -4,19 +4,18 @@
     xmlns:launcher="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent" 
+    android:orientation="vertical"
     android:background="#90000000">
 
-    <LinearLayout
+    <FrameLayout 
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@android:color/transparent" >
+        android:layout_height="wrap_content">
 
         <com.xx.mylauncher.Workspace
             android:id="@+id/workspace"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent" >
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_purple" >
 
             <com.xx.mylauncher.CellLayout
                 android:id="@+id/celllayout"
@@ -25,29 +24,59 @@
                 android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
 
-                <!-- 其它的CellLayout  -->
-                
-
             </com.xx.mylauncher.CellLayout>
-        </com.xx.mylauncher.Workspace>
+            
+                <!-- 其它的CellLayout  -->
+                <com.xx.mylauncher.CellLayout
+                android:id="@+id/celllayout1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_blue_bright"
+                launcher:cellSize="78dp" >
+            </com.xx.mylauncher.CellLayout>
 
-	<!-- 滑动指示 -->
-	    <com.xx.mylauncher.SlideIndicator 
+            <com.xx.mylauncher.CellLayout
+                android:id="@+id/celllayout2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_green_dark"
+                launcher:cellSize="78dp" >
+            </com.xx.mylauncher.CellLayout>
+
+            <com.xx.mylauncher.CellLayout
+                android:id="@+id/celllayout3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_orange_light"
+                launcher:cellSize="78dp" >
+            </com.xx.mylauncher.CellLayout>
+
+            <com.xx.mylauncher.CellLayout
+                android:id="@+id/celllayout4"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_red_light"
+                launcher:cellSize="78dp" >
+            </com.xx.mylauncher.CellLayout>
+            
+</com.xx.mylauncher.Workspace>
+
+        	<!-- 滑动指示 -->
+	 <com.xx.mylauncher.SlideIndicator 
         android:layout_width="match_parent"
         android:layout_height="wrap_content"	
         launcher:numbers="5"
-        launcher:radius="10dp"
+        launcher:radius="7dp"
         launcher:background_color="#CDC9C9"
         launcher:foreground_color="@android:color/white"
-        launcher:space="10dp"	/>
+        launcher:space="5dp"
+        android:layout_gravity="bottom"	/>
+        
+                
+    </FrameLayout>
+        
 	
 	
 	<!-- HotSeat  -->
 	
-	
-	
-	
-        
-    </LinearLayout>
-
 </com.xx.mylauncher.DragLayer>

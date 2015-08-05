@@ -60,6 +60,9 @@ public class CellLayout extends ViewGroup {
 	/**Launcher 引用 *///TODO要修改
 	private MainActivity m_Launcher;
 	
+	/** 缩放高度，和Workspace一样 */
+	private static final float HEIGHT_SCALE = 3/4f;
+	
 	/** 当拖动一块View到CellLayout时，保存相关的信息用于绘制辅助效果 */
 	private DragObjectInfo m_DragObjectInfo = new DragObjectInfo();
 	
@@ -116,8 +119,9 @@ public class CellLayout extends ViewGroup {
 		
 		int iCellHCount;
 		int iCellVCount;
-		
+
 		if (iWidthMode == MeasureSpec.EXACTLY) {
+			Utils.log(TAG, "width-exactly");
 			iParentWidth = iWidthSize;
 		} else if (iWidthMode == MeasureSpec.AT_MOST) {
 			iParentWidth = m_iScreenWidth;
@@ -126,14 +130,19 @@ public class CellLayout extends ViewGroup {
 		}
 		
 		if (iHeightMode == MeasureSpec.EXACTLY) {
+			Utils.log(TAG, "height-exactly");
 			iParentHeight = iHeightSize;
 		} else if (iHeightMode == MeasureSpec.AT_MOST) {
-			iParentHeight = m_iScreenHeight / 8 * 7;
+			iParentHeight = (int) (m_iScreenHeight * HEIGHT_SCALE);
 			
 		} else {
-			iParentHeight = m_iScreenHeight / 8 * 7;
+			iParentHeight = (int) (m_iScreenHeight * HEIGHT_SCALE);
 			
 		}
+		
+		/*
+		 * 排列子view，cell
+		 */
 		
 		//这里先只考虑平分格子排序，所以设置的水平和垂直格子间隔先不考虑
 		m_iCellHCount = iCellHCount = (iParentWidth - getPaddingLeft() - getPaddingRight() ) / (m_iCellSize + m_iSpaceHorizatation); 
@@ -169,6 +178,8 @@ public class CellLayout extends ViewGroup {
 			Utils.log(false, TAG, "child[%d] width=%d, height=%d", i, width, height);
 		}
 		
+		
+		Utils.log(TAG, "CellLayout: width=%d, height=%d", iParentWidth, iParentHeight);
 		setMeasuredDimension(iParentWidth, iParentHeight);		
 		
 	}

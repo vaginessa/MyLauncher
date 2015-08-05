@@ -26,7 +26,7 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 
 	private static final boolean DEBUG = true;
 
-	private static final float HEIGHT_SCALE = 3/4f;
+	private static final float HEIGHT_SCALE = 5/6f;
 	
 	/** 屏幕的宽度 */
 	private int m_iScreenWidth;
@@ -86,50 +86,37 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 		int iParentWidth;
 		int iParentHeight;
 		
-		int iWidthTemp = 0;
-		int iHeightTemp = 0;
-		
-		
-		for (int i = 0; i < iChildCount; i++) {
-			View child = getChildAt(i);
+		/*
+		 * 测量高度
+		 */
+		if (iYMode == MeasureSpec.AT_MOST) {
+			iParentHeight = (int) Math.min(iYHeight, m_iScreenHeight*HEIGHT_SCALE);
 			
-			measureChild(child, widthMeasureSpec, heightMeasureSpec);
-			iWidthTemp += child.getMeasuredWidth();
-			iHeightTemp = Math.max(iHeightTemp, child.getMeasuredHeight());
-		}
-		
-		
-		if (iXMode == MeasureSpec.EXACTLY) {
-			log("exactly");
-			iParentWidth = Math.max(iXWidth, iWidthTemp);
+		} else if (iYMode == MeasureSpec.EXACTLY) {
+			iParentHeight = iYHeight;
 			
-		} else if (iXMode == MeasureSpec.UNSPECIFIED) {
-			log("unspecified");
-			iParentWidth = Math.max(m_iScreenWidth, iWidthTemp);
-			
-		} else  {	//MeasureSpec.AT_MOST
-			log("at_most");
-			iParentWidth = Math.max(iXWidth, iWidthTemp);
-		}
-		
-		log("iParentWidth=%d, iXWidth=%d, iWidthTemp=%d", iParentWidth, iXWidth, iWidthTemp);
-		
-		if (iYMode == MeasureSpec.EXACTLY) {
-//			iParentHeight = iYHeight;
-//			int iH = (int) ((float)m_iScreenHeight * HEIGHT_SCALE);
-//			iParentHeight = (int) (iYHeight > iH ? iH : iYHeight);
-			iParentHeight = (int) (m_iScreenHeight * HEIGHT_SCALE);
-			
-		} else if (iYMode == MeasureSpec.UNSPECIFIED) {
-			iParentHeight = m_iScreenHeight;
-			
-		} else {	//MeasureSpec.AT_MOST
-//			iParentHeight = Math.min(iYHeight, iHeightTemp);
-			iParentHeight = Math.min(iYHeight, iHeightTemp);
+		} else {
+			iParentHeight = (int) Math.min(iYHeight, m_iScreenHeight*HEIGHT_SCALE);
 			
 		}
+		/*
+		 * 测量宽度，就是屏幕的宽度 * 子View的个数(多少个屏幕)，不考虑其它情况
+		 * 
+		 */
+		iParentWidth = m_iScreenWidth * iChildCount;
 		
-		log("iParentWidth=%d [Workspace的宽度], iParentHeight=%d [Workspace的高度]", iParentWidth, iParentHeight);
+		/*
+		 * 测量子控件 CellLayout
+		 */
+		View child;
+		int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(m_iScreenWidth, MeasureSpec.EXACTLY);
+		int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(iParentHeight, MeasureSpec.EXACTLY);
+		for (int i=0; i<iChildCount; i++) {
+			child = getChildAt(i);
+			child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+		}
+		
+		log("iParentWidth[Workspace的宽度]=%d, iParentHeight[Workspace的高度]=%d", iParentWidth, iParentHeight);
 		log("screen height = %d, screen width = %d", m_iScreenHeight, m_iScreenWidth);
 		setMeasuredDimension(iParentWidth, iParentHeight);
 		
@@ -155,7 +142,7 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 			right = left + width;
 			
 			
-			log("child[%d]  's top=%d, left=%d, right=%d, bottom=%d", i, top, left, right, bottom);
+			Utils.log(TAG, "child[%d]  's top=%d, left=%d, right=%d, bottom=%d", i, top, left, right, bottom);
 			child.layout(left, top, right, bottom);
 			
 			left += width;
@@ -171,7 +158,10 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 	@Override
 	protected void onAttachedToWindow() {
 		super.onAttachedToWindow();
-		m_DragController.setWindowToken(getWindowToken());
+		if (m_DragController != null) {
+			m_DragController.setWindowToken(getWindowToken());	
+		}
+		
 	}
 	
 	

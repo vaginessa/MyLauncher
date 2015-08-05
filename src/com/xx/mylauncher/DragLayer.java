@@ -14,13 +14,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 /**
  * 拖动层，绘制icon的拖动效果及拖动时的一些辅助效果
  * @author baoxing
  *
  */
-public class DragLayer extends FrameLayout {
+public class DragLayer extends LinearLayout {
 	
 	private static final String TAG = "DragLayer";
 	
@@ -112,11 +113,26 @@ public class DragLayer extends FrameLayout {
 		
 	}
 	
-	//这里可能不用使用，自己的布局？不用
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		// TODO Auto-generated method stub
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+		
+		final int iWidthSelf = MeasureSpec.getSize(widthMeasureSpec);
+		final int iHeightSelf = MeasureSpec.getSize(heightMeasureSpec);
+		final int iChildCount = getChildCount();
+		
+		/*
+		 * 测量子View
+		 */
+//		View child;
+/*		for (int i=0; i<iChildCount; i++) {
+			child = getChildAt(i);
+			child.measure(widthMeasureSpec, heightMeasureSpec);			
+		}
+		*/
+		setMeasuredDimension(iWidthSelf, iHeightSelf);
+		
+		Utils.log(TAG, "width=%d, height=%d, iWidthSelf=%d, iHeightSelf=%d", getMeasuredWidth(), getMeasuredHeight(), iWidthSelf, iHeightSelf );
 	}
 	
 	//在这里绘制拖动的效果，即child的坐标位置不断的变化，然后requestLayout请求
@@ -129,6 +145,49 @@ public class DragLayer extends FrameLayout {
 		
 		final int iChildCount = getChildCount();
 		
+		
+		/*
+		 * 布局子View， workspace和indication和hotseat
+		 */
+		
+/*		
+		View childLauncher;
+		int iLeft = 0;
+		int iTop = 0;
+		int iRight;
+		int iBottom = 0;
+		for (int i=0; i<iChildCount; i++) {
+			childLauncher = getChildAt(i);
+		
+			int width;
+			int height;
+			if ( childLauncher instanceof Workspace ) {
+				width = childLauncher.getMeasuredWidth();
+				height = childLauncher.getMeasuredHeight();
+				iRight = width;
+				iBottom = height;
+				
+				childLauncher.layout(iLeft, iTop, iRight, iBottom);
+				Utils.log(TAG, "layout-workspace[(%d, %d), (%d, %d)]). [width=%d, height=%d]", iLeft, iTop, iRight, iBottom, width, height);
+			}
+			if (childLauncher instanceof SlideIndicator ) {
+				width = childLauncher.getMeasuredWidth();
+				height = childLauncher.getMeasuredHeight();
+				iTop = iBottom;
+				iRight = width;
+				iBottom += height;
+				
+				childLauncher.layout(iLeft, iTop, iRight, iBottom);
+				Utils.log(TAG, "layout-slideIndicator[(%d, %d), (%d, %d)]). [width=%d, height=%d]", iLeft, iTop, iRight, iBottom, width, height);
+			}
+			
+		}
+		*/
+		
+		
+		/*
+		 * 拖动的dragview绘画提示，这个不应该放在这里
+		 */
 		View child;
 		DragLayer.LayoutParams lp;
 		ViewGroup.LayoutParams params;
@@ -259,7 +318,7 @@ public class DragLayer extends FrameLayout {
 		return m_DragController.onTouchEvent(event);
 	}
 	
-	public static class LayoutParams extends FrameLayout.LayoutParams {
+	public static class LayoutParams extends LinearLayout.LayoutParams {
 		
 		public int x; 
 		public int y;
@@ -286,7 +345,7 @@ public class DragLayer extends FrameLayout {
 	} 
 	
 	@Override
-	public android.widget.FrameLayout.LayoutParams generateLayoutParams(
+	public android.widget.LinearLayout.LayoutParams generateLayoutParams(
 			AttributeSet attrs) {
 		return new DragLayer.LayoutParams(getContext(), attrs);
 	}
@@ -297,13 +356,13 @@ public class DragLayer extends FrameLayout {
 	}
 	
 	@Override
-	protected android.view.ViewGroup.LayoutParams generateLayoutParams(
+	protected android.widget.LinearLayout.LayoutParams generateLayoutParams(
 			android.view.ViewGroup.LayoutParams p) {
 		return new DragLayer.LayoutParams(p);
 	}
 	
 	@Override
-	protected android.widget.FrameLayout.LayoutParams generateDefaultLayoutParams() {
+	protected android.widget.LinearLayout.LayoutParams generateDefaultLayoutParams() {
 		return new DragLayer.LayoutParams();
 	}
 	

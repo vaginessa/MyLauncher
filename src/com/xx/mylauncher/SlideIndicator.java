@@ -60,6 +60,8 @@ public class SlideIndicator extends View {
 	private float m_fCurX;
 	/** 滑动的动画时间 */
 	private static final long ANIMATOR_DURATION = 500;
+
+	private static final String TAG = "SlideIndicator";
 	
 	/** 当前指示的是第几个 */
 	private int m_iCurInditor = 0;
@@ -142,6 +144,8 @@ public class SlideIndicator extends View {
 		m_iHeight = iHeight;
 		
 		setMeasuredDimension(iWidth, iHeight);
+		
+		Utils.log(TAG, "[width=%d, height=%d]", iWidth, iHeight);
 	}
 	
 	

@@ -20,7 +20,7 @@ import android.view.WindowManager;
  * @author baoxing
  * 
  */
-public class Workspace extends ViewGroup  implements DragSource, DropTarget{
+public class Workspace extends PagedView  implements DragSource, DropTarget{
 
 	private static final String TAG = "Workspace";
 
@@ -46,7 +46,7 @@ public class Workspace extends ViewGroup  implements DragSource, DropTarget{
 	private List<CellLayout> m_ListCellLayout = new ArrayList<CellLayout>();
 	
 	/** 当前所处的屏幕 */
-	private int m_iCurScreen = 0;
+//	private int m_iCurScreen = 0;
 	
 	public Workspace(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);

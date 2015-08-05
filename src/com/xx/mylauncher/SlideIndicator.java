@@ -205,7 +205,11 @@ public class SlideIndicator extends View {
 	 * @param isAnim	是否启动动画平滑
 	 */
 	public void setCurInditor(int m_iCurInditor, boolean isAnim) {
-		m_iLastInditor = m_iCurInditor;
+		/*
+		 * 这里犯这个错误，绝大部分的原因是变量的命名问题，又debug了一会儿
+		 */
+//		m_iLastInditor = m_iCurInditor;
+		m_iLastInditor = this.m_iCurInditor;
 		this.m_iCurInditor = m_iCurInditor;
 		updateIndicator(isAnim);
 	}

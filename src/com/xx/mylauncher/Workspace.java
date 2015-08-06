@@ -304,7 +304,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		final int iCounts = m_ListCellLayout.size();
 		final int iUnitSize = m_iScreenWidth;
 		
-		return iCounts*iUnitSize;
+		return (iCounts-1)*iUnitSize;
 	};
 	
 	

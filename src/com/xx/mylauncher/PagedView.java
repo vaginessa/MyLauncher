@@ -59,8 +59,22 @@ public abstract class PagedView extends ViewGroup {
 	/** 屏幕的宽度 */
 	private int m_iScreenWidth;
 	
+	/** 滑动的X轴方向的补偿量，Launcher中的源码的这个思路很好。这种思维怎么培养. */
+	private int m_iScrollXCompasation = 0;
 	
 	private static final boolean m_bEnablePagingTouchSlop = false;
+	
+	/** 获得允许执行一个fling手势动作的最大速度值 */
+	private int m_iMaximumVelocity;
+	
+	/** fling手势发生的一个距离容差量 */
+	private static final int MIN_LENGTH_FOR_FLING = 25;
+	
+	/** 滑动的速度要大于该阈值，才进行屏幕切换 */
+	private static final int VELOCITY_THRESHOLD = 500;
+	
+	/** 滑动到另一屏幕的时间 */
+	private static final int SCREEN_SCROLL_DURATION = 500;
 	
 	public PagedView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -86,6 +100,7 @@ public abstract class PagedView extends ViewGroup {
 		final ViewConfiguration configuration = ViewConfiguration.get(getContext());
 		m_iTouchSlop = configuration.getScaledTouchSlop();
 		m_iPagingTouchSlop = configuration.getScaledPagingTouchSlop();
+		m_iMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 		m_Scroller = new Scroller(context);
 		
 		Utils.log(TAG, "m_iTouchSlop=%d, m_iPagingTouchSlop=%d", m_iTouchSlop, m_iPagingTouchSlop);
@@ -184,10 +199,8 @@ public abstract class PagedView extends ViewGroup {
 				if (Math.abs(fDeltaX) > 1.0f) {
 					Utils.log(TAG, "onTouchEvent-ACTION_MOVE: 滑呀滑");
 					m_iLastX = fX;
-					final boolean isInBounds = isInWorkspaceBoundLimit(getScrollX(), fDeltaX>=0 ? 1:0);
-					if (isInBounds) {
-						scrollBy((int)fDeltaX, 0);	
-					}
+					
+					scrollBy((int)fDeltaX, 0);
 					
 				}
 				
@@ -199,6 +212,26 @@ public abstract class PagedView extends ViewGroup {
 			break;
 		case MotionEvent.ACTION_UP:
 			//TODO 跟踪速度
+			final int iActivityPointId = m_iCurPointId;
+			final int iPointerIndex = event.findPointerIndex(iActivityPointId);
+			final float iX = event.getX(iPointerIndex);
+			final VelocityTracker velocityTracker = m_VelocityTracker;
+			velocityTracker.computeCurrentVelocity(1000, m_iMaximumVelocity);
+			
+			/*
+			 * X轴的速度，px/s；正值手指往右滑，负值往左滑。
+			 */
+			int iVelocityX = (int) velocityTracker.getXVelocity(iActivityPointId);
+//			Utils.log(TAG+"Velocity", "iVelocityX[x轴的速度]=%d", iVelocityX);
+			boolean isFling =( Math.abs(iVelocityX)>VELOCITY_THRESHOLD) && (m_iTotalMoveX>MIN_LENGTH_FOR_FLING); 
+			if (isFling) {
+				//fling to another screen
+				
+			} else {
+				//scroll to nearest screen
+				
+			}
+			
 			m_iCurTouchState = TOUCH_STATE_REST;
 			m_iCurPointId = INVALID_POINT_ID;
 			releaseVelocityTracker();
@@ -223,39 +256,61 @@ public abstract class PagedView extends ViewGroup {
 	}
 	
 	/**
-	 * 判断滚动（移动时）是否在Workspace的边界内
-	 * @param scrollX
-	 * @param direction	0，向左；1，向右
-	 * @return true，在范围内
+	 * fling到另一个屏幕
+	 * @param direction	0为手指往右滑，屏幕左移，1为屏幕右移
+	 * @param velocity
 	 */
-	private boolean isInWorkspaceBoundLimit(int curX, int direction) {
-		boolean result = true;
-		final int iWorkspaceWidth = getWorkspaceWidth();
-		final int left = 0;
-		final int right = 1;
+	private void flingToAnthorScreen(int direction, int velocity) {
+		final int iPrev = 0;
+		final int iNext = 1;
+		final int iCurScreen = m_iCurScreen;
+		final int iTotalScreen = getScreenCounts();
 		
-		if ( (direction==left && curX<=0) || (direction==right && curX>=iWorkspaceWidth) ) {
-			result = false;
+		if ( (direction==iPrev) && (iCurScreen==0)) {
+			return;
 		}
 		
-		return result;
+		if ( (direction==iNext) && (iCurScreen==iTotalScreen-1)) {
+			return;
+		}
+		
+		if (direction == iPrev) {
+			m_Scroller.startScroll(getScrollX(), 0, dx, 0, SCREEN_SCROLL_DURATION);
+		} else {
+			
+		}
+		
 	}
 	
+	@Override
+	public void scrollBy(int x, int y) {
+		scrollTo(m_iScrollXCompasation+x, y);
+	}
+
+	@Override
+	public void scrollTo(int x, int y) {
+		final int iMaxValue = getWorkspaceWidth();
+		m_iScrollXCompasation = x;
+		if (x<0) {
+			m_iScrollXCompasation = 0;
+			super.scrollTo(0, y);
+		} else if (x>iMaxValue ) {
+			m_iScrollXCompasation = iMaxValue;
+			super.scrollTo(iMaxValue, y);
+		} else {
+			super.scrollTo(x, y);
+		}
+	}
 	
 	@Override
 	public void computeScroll() {
 		super.computeScroll();
 		if (m_Scroller.computeScrollOffset() ) {
-			scrollTo( getScrollX(), 0);
+			scrollTo(m_Scroller.getCurrX(), 0);
 		}
 		
 		
 	}
-	
-	
-	
-	
-	
 	
 	private void onSecondaryPointerUp(MotionEvent ev) {
         final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>

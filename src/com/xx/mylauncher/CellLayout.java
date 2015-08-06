@@ -8,6 +8,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -229,6 +230,24 @@ public class CellLayout extends ViewGroup {
 		}
 		
 	}
+	
+	
+	@Override
+	public boolean onInterceptTouchEvent(MotionEvent ev) {
+		Utils.log(TAG, "onInterceptToucheEvent");
+		
+		return super.onInterceptTouchEvent(ev);
+	}
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		Utils.log(TAG, "onTouchEvent");
+		
+		return super.onTouchEvent(event);
+	}
+	
+	
+	
 	
 	/**
 	 * 在指定位置是否可以添加子View

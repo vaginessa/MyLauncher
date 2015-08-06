@@ -55,7 +55,14 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_CellLayout.setLauncher(this);	//TODO 先这样添加
 		m_Workspace.setDragController(m_DragController);
 		m_Workspace.setDragLayer(m_DragLayer);
-		m_Workspace.setOnLongClickListener(this);
+//		m_Workspace.setOnLongClickListener(this);
+		m_Workspace.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				m_Workspace.setCellLayoutLongPressListener(MainActivity.this);
+			}
+		});
 		
 		
 		m_AppManager = AppManager.getInstance(this);

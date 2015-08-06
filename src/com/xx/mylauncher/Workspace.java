@@ -165,6 +165,12 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 	}
 	
 	
+	public void setCellLayoutLongPressListener(View.OnLongClickListener l) {
+		for (CellLayout item : m_ListCellLayout) {
+			item.setOnLongClickListener(l);
+		}
+	}
+	
 	private void log(String msg) {
 		if (DEBUG) {
 			Log.i(TAG, msg);
@@ -286,9 +292,20 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		}
 		
 		return false;
+	}
+
+	@Override
+	protected int getScreenCounts() {
+		return m_ListCellLayout.size();
 	}	
 	
-	
+	@Override
+	protected int getWorkspaceWidth() {
+		final int iCounts = m_ListCellLayout.size();
+		final int iUnitSize = m_iScreenWidth;
+		
+		return iCounts*iUnitSize;
+	};
 	
 	
 }

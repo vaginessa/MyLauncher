@@ -2,18 +2,21 @@ package com.xx.mylauncher;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.Scroller;
 
 /**
  * 负责多屏滑动
  * @author baoxing
  *
  */
-public class PagedView extends ViewGroup {
+public abstract class PagedView extends ViewGroup {
 
 	private static final String TAG = "PagedView";
 
@@ -50,6 +53,13 @@ public class PagedView extends ViewGroup {
 	/** 是否滑动了的距离量 */
 	private int m_iTouchSlop;
 	
+	/** 用来控制页面屏幕的滑动 */
+	private Scroller m_Scroller;
+	
+	/** 屏幕的宽度 */
+	private int m_iScreenWidth;
+	
+	
 	private static final boolean m_bEnablePagingTouchSlop = false;
 	
 	public PagedView(Context context, AttributeSet attrs) {
@@ -68,9 +78,15 @@ public class PagedView extends ViewGroup {
 
 	
 	private void initRes(Context context) {
+		final DisplayMetrics metrics = context.getResources().getDisplayMetrics();	//dont new one
+		final WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		wm.getDefaultDisplay().getMetrics(metrics);
+		m_iScreenWidth = metrics.widthPixels;
+		
 		final ViewConfiguration configuration = ViewConfiguration.get(getContext());
 		m_iTouchSlop = configuration.getScaledTouchSlop();
 		m_iPagingTouchSlop = configuration.getScaledPagingTouchSlop();
+		m_Scroller = new Scroller(context);
 		
 		Utils.log(TAG, "m_iTouchSlop=%d, m_iPagingTouchSlop=%d", m_iTouchSlop, m_iPagingTouchSlop);
 	}
@@ -84,6 +100,8 @@ public class PagedView extends ViewGroup {
 	
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
+		Utils.log(TAG, "oninterceptTouchEvent");
+		
 		acquireVelocityTrackerAndAddMovement(ev);
 		
 		if (getChildCount() <= 0) {
@@ -121,31 +139,152 @@ public class PagedView extends ViewGroup {
 			 */
 			m_iCurTouchState = TOUCH_STATE_REST;
 			m_iCurPointId = INVALID_POINT_ID;
-			//TODO 跟踪速度
+			releaseVelocityTracker();
 			break;
 		case MotionEvent.ACTION_POINTER_UP:
 			/*
+			 * 当另一根手指释放时触发
 			 * 切换当前的手指索引指针
 			 */
+			onSecondaryPointerUp(ev);
+			releaseVelocityTracker();
 			break;
 		}
 		
+		Utils.log(TAG, "return=%b, m_iCurTouchState=%d", m_iCurTouchState!=TOUCH_STATE_REST, m_iCurTouchState);
 		return m_iCurTouchState != TOUCH_STATE_REST;
 	}
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+		Utils.log(TAG, "onTouchEvent");
 		if (getChildCount() <=0 ) {
 			Utils.log(TAG, "no childs");
 			return super.onTouchEvent(event);
 		}
-		Utils.log(TAG, "滑呀滑");
+		
+		acquireVelocityTrackerAndAddMovement(event);
+		
+		final int action = event.getAction();
+		
+		switch (action&MotionEvent.ACTION_MASK) {
+		case MotionEvent.ACTION_DOWN:
+			m_iTotalMoveX = 0;
+			m_iLastX = event.getX();
+			m_iCurPointId = event.getPointerId(0);
+			
+			break;
+		case MotionEvent.ACTION_MOVE:
+			if (m_iCurTouchState == TOUCH_STATE_SCROLING) {
+				final int pointerIndex = event.findPointerIndex(m_iCurPointId);
+				final float fX = event.getX(pointerIndex);
+				final float fDeltaX = m_iLastX - fX;
+				m_iTotalMoveX += Math.abs(fDeltaX);
+				
+				if (Math.abs(fDeltaX) > 1.0f) {
+					Utils.log(TAG, "onTouchEvent-ACTION_MOVE: 滑呀滑");
+					m_iLastX = fX;
+					final boolean isInBounds = isInWorkspaceBoundLimit(getScrollX(), fDeltaX>=0 ? 1:0);
+					if (isInBounds) {
+						scrollBy((int)fDeltaX, 0);	
+					}
+					
+				}
+				
+			} else {
+				adjustWhetherScroll(event);
+			}
+			
+			
+			break;
+		case MotionEvent.ACTION_UP:
+			//TODO 跟踪速度
+			m_iCurTouchState = TOUCH_STATE_REST;
+			m_iCurPointId = INVALID_POINT_ID;
+			releaseVelocityTracker();
+			
+			Utils.log(TAG, "getScrollX=%d, getCurrX=%d, getFinalX=%d", getScrollX(), m_Scroller.getCurrX(), m_Scroller.getFinalX());
+			break;
+		case MotionEvent.ACTION_CANCEL:
+			if (m_iCurTouchState == TOUCH_STATE_SCROLING) {
+				//TODO 
+				//滑向最近的屏幕
+			}
+			m_iCurTouchState = TOUCH_STATE_REST;
+			m_iCurPointId = INVALID_POINT_ID;
+			releaseVelocityTracker();
+			break;
+		case MotionEvent.ACTION_POINTER_UP:
+			onSecondaryPointerUp(event);
+			break;
+		}
 		
 		return true;
 	}
 	
+	/**
+	 * 判断滚动（移动时）是否在Workspace的边界内
+	 * @param scrollX
+	 * @param direction	0，向左；1，向右
+	 * @return true，在范围内
+	 */
+	private boolean isInWorkspaceBoundLimit(int curX, int direction) {
+		boolean result = true;
+		final int iWorkspaceWidth = getWorkspaceWidth();
+		final int left = 0;
+		final int right = 1;
+		
+		if ( (direction==left && curX<=0) || (direction==right && curX>=iWorkspaceWidth) ) {
+			result = false;
+		}
+		
+		return result;
+	}
 	
 	
+	@Override
+	public void computeScroll() {
+		super.computeScroll();
+		if (m_Scroller.computeScrollOffset() ) {
+			scrollTo( getScrollX(), 0);
+		}
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	private void onSecondaryPointerUp(MotionEvent ev) {
+        final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
+        MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+		final int pointerId = ev.getPointerId(pointerIndex);
+		if (pointerId == m_iCurPointId) {
+			/*
+			 * 主的拖放手指离开
+			 */
+			final int newPointerIndex = pointerIndex==0 ? 1 : 0;
+			m_iLastX = ev.getX(newPointerIndex);
+			m_iLastY = ev.getY(newPointerIndex);
+			m_iCurPointId = ev.getPointerId(newPointerIndex);
+			if (m_VelocityTracker != null) {
+				m_VelocityTracker.clear();
+			}
+		}
+		
+	}
+	
+	/**
+	 * 释放VelocityTracker
+	 */
+	private void releaseVelocityTracker() {
+		if (m_VelocityTracker != null) {
+			m_VelocityTracker.recycle();
+			m_VelocityTracker = null;
+		}
+	}
 	
 	/**
 	 * 判断是否应该进入滚动的状态
@@ -153,8 +292,13 @@ public class PagedView extends ViewGroup {
 	 */
 	private void adjustWhetherScroll(MotionEvent ev) {
 		Utils.log(TAG, "adjustWhetherScroll()");
-		final float iX = ev.getX();
-		final float iY = ev.getY();
+		final int pointerIndx = ev.findPointerIndex(m_iCurPointId);
+		if (pointerIndx == -1) {
+			return;
+		}
+		
+		final float iX = ev.getX(pointerIndx);
+		final float iY = ev.getY(pointerIndx);
 		
 		boolean bIsMoveH = Math.abs(m_iLastX-iX) > m_iTouchSlop ? true : false;
 		boolean bIsMoveV = Math.abs(m_iLastY-iY) > m_iTouchSlop ? true : false;
@@ -209,8 +353,10 @@ public class PagedView extends ViewGroup {
 	 */
 	
 	
-	
-	
+	/**一共有多少个屏幕 */
+	protected abstract int getScreenCounts();
+	/** 得到Workspace的总宽度 */
+	protected abstract int getWorkspaceWidth();
 	
 	
 	

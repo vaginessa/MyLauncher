@@ -15,13 +15,13 @@
             android:id="@+id/workspace"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_purple" >
+            android:background="@android:color/transparent" >
 
             <com.xx.mylauncher.CellLayout
                 android:id="@+id/celllayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/transparent"
+                android:background="@android:color/holo_orange_light"
                 launcher:cellSize="78dp" >
 
             </com.xx.mylauncher.CellLayout>

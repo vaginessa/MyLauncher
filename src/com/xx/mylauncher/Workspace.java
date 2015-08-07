@@ -171,6 +171,14 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		}
 	}
 	
+	
+	public void setCellLayoutAttachLauncher(MainActivity launcher) {
+		for (CellLayout item : m_ListCellLayout) {
+			item.setLauncher(launcher);
+		}
+	}
+	
+	
 	private void log(String msg) {
 		if (DEBUG) {
 			Log.i(TAG, msg);
@@ -185,8 +193,20 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		}
 	}
 	
-	
+	/**
+	 * 返回当前所处的屏幕
+	 * @return
+	 * @deprecated 使用 {@link #getCurCellLayout()}，函数的意义更清晰
+	 */
 	public CellLayout getCurScreen() {
+		return m_ListCellLayout.get(m_iCurScreen);
+	}
+	
+	/**
+	 * 返回当前所处的CellLayout
+	 * @return
+	 */
+	public CellLayout getCurCellLayout() {
 		return m_ListCellLayout.get(m_iCurScreen);
 	}
 

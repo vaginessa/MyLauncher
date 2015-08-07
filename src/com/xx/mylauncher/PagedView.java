@@ -509,6 +509,7 @@ public abstract class PagedView extends ViewGroup {
 		return m_iScreenWidth;
 	}
 	
+	
 	/**一共有多少个屏幕 */
 	protected abstract int getScreenCounts();
 	/** 得到Workspace的总宽度 */

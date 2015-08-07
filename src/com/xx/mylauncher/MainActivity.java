@@ -32,7 +32,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 
 	private Workspace m_Workspace;
 	
-	private CellLayout m_CellLayout;
+//	private CellLayout m_CellLayout;
 	
 	private DragController m_DragController;
 	
@@ -50,13 +50,13 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		m_DragLayer = (DragLayer) findViewById(R.id.dragLayout);
 		m_Workspace = (Workspace) findViewById(R.id.workspace);
-		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
+//		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
 		m_SlideIndicator = (SlideIndicator) findViewById(R.id.slideIndicator);
 		m_DragController = new DragController(this, this );
 		
 		m_DragLayer.setDragController(m_DragController);
 		m_DragController.registerDropTarget(m_Workspace);	//别忘记注册添加
-		m_CellLayout.setLauncher(this);	//TODO 先这样添加
+//		m_CellLayout.setLauncher(this);	//TODO 先这样添加
 		m_Workspace.setDragController(m_DragController);
 		m_Workspace.setDragLayer(m_DragLayer);
 //		m_Workspace.setOnLongClickListener(this);
@@ -65,6 +65,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 			@Override
 			public void run() {
 				m_Workspace.setCellLayoutLongPressListener(MainActivity.this);
+				m_Workspace.setCellLayoutAttachLauncher(MainActivity.this);
 			}
 		});
 		
@@ -102,13 +103,15 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 * @param appInfo
 	 */
 	private void addViewInScreen(final AppInfo appInfo) {
+		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		
 		ShortCutView2 shortcutView = new ShortCutView2(getBaseContext());
 		shortcutView.setIcon(appInfo.getIcon());
 		shortcutView.setLabel(appInfo.getLabelName());
 		
 		int cellHSpan = 1;
 		int cellVSpan = 1;
-		List<int[]> result = m_CellLayout.isAcceptAddChild(cellHSpan, cellVSpan);
+		List<int[]> result = curCellLayout.isAcceptAddChild(cellHSpan, cellVSpan);
 		
 		if (result.size() > 0) {
 			int[] item = result.get(new Random().nextInt(result.size()));
@@ -130,6 +133,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 * @param view
 	 */
 	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan, final AppInfo appInfo, final View view) {
+		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		
 		CellInfo cellInfo = new CellInfo();
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellVSpan(cellVSpan);
@@ -149,7 +154,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
-		m_CellLayout.addView(view);
+//		m_CellLayout.addView(view);
+		curCellLayout.addView(view);
 	}
 	
 	/**
@@ -157,6 +163,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 * @param widgetView
 	 */
 	private void addWidgetInCellLayout(final View widgetView, final AppWidgetProviderInfo info, int cellX, int cellY, int cellHSpan, int cellVSpan) {
+		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		
 		CellInfo cellInfo = new CellInfo();
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellHSpan(cellHSpan);
@@ -176,14 +184,17 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 //		widgetView.setFocusable(true);
 		widgetView.setOnLongClickListener(this);
 		
-		m_CellLayout.addView(widgetView);
+//		m_CellLayout.addView(widgetView);
+		curCellLayout.addView(widgetView);
 	}
 	
 	
 	void addViewInScreen(final View widgetView, final AppWidgetProviderInfo info) {
-		final int iCellSize = m_CellLayout.getCellSize();
-		final int iHSpace = m_CellLayout.getHorizontalSpace();
-		final int iVSpace = m_CellLayout.getVerticalSpace();
+		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		
+		final int iCellSize = curCellLayout.getCellSize();
+		final int iHSpace = curCellLayout.getHorizontalSpace();
+		final int iVSpace = curCellLayout.getVerticalSpace();
 		final int iWidth = info.minWidth;
 		final int iHeight = info.minHeight;
 		
@@ -200,7 +211,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		int iVSpan = (int ) Math.ceil( (iHeight+iOffSize) / iUnitSize);
 		
 		
-		List<int[]> result = m_CellLayout.isAcceptAddChild(iHSpan, iVSpan);
+		List<int[]> result = curCellLayout.isAcceptAddChild(iHSpan, iVSpan);
 		
 		if (result.size() > 0) {
 			int[] item = result.get(new Random().nextInt(result.size()) );
@@ -217,6 +228,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	
 	
 	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan) {
+		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		
 		View v = new View(this);
 		CellInfo cellInfo = new CellInfo();
 		cellInfo.setCellHSpan(cellHSpan);
@@ -239,7 +252,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		v.setFocusable(true);
 		v.setOnLongClickListener(this);
 		
-		m_CellLayout.addView(v);
+		curCellLayout.addView(v);
 	}
 	
 	@Override

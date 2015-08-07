@@ -73,6 +73,17 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
 "<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
          */
         public static final int foreground_color=0x7f01000a;
+        /**  HotSeat两边的间隔 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int hotseat_edge_space=0x7f01000f;
         /**  控件高度的内偏移量Bottom 
          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
 Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
@@ -248,17 +259,37 @@ containing a value of this type.
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #HotSeat_hotseat_edge_space com.xx.mylauncher:hotseat_edge_space}</code></td><td> HotSeat两边的间隔 </td></tr>
            <tr><td><code>{@link #HotSeat_hotseat_offset_bottom com.xx.mylauncher:hotseat_offset_bottom}</code></td><td> 控件高度的内偏移量Bottom </td></tr>
            <tr><td><code>{@link #HotSeat_hotseat_offset_top com.xx.mylauncher:hotseat_offset_top}</code></td><td> 控件高度的内偏移量Top </td></tr>
            <tr><td><code>{@link #HotSeat_hotseat_space com.xx.mylauncher:hotseat_space}</code></td><td> 格子间的间隔 </td></tr>
            </table>
+           @see #HotSeat_hotseat_edge_space
            @see #HotSeat_hotseat_offset_bottom
            @see #HotSeat_hotseat_offset_top
            @see #HotSeat_hotseat_space
          */
         public static final int[] HotSeat = {
-            0x7f01000c, 0x7f01000d, 0x7f01000e
+            0x7f01000c, 0x7f01000d, 0x7f01000e, 0x7f01000f
         };
+        /**
+          <p>
+          @attr description
+           HotSeat两边的间隔 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:hotseat_edge_space
+        */
+        public static final int HotSeat_hotseat_edge_space = 3;
         /**
           <p>
           @attr description

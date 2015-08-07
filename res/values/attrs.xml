@@ -40,6 +40,8 @@
         <attr name="hotseat_offset_bottom" format="dimension" />
         <!-- 格子间的间隔 -->
         <attr name="hotseat_space"  format="dimension" />
+        <!-- HotSeat两边的间隔 -->
+        <attr name="hotseat_edge_space" format="dimension" />
     </declare-styleable>
     
 </resources>

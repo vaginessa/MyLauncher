@@ -73,8 +73,11 @@ public abstract class PagedView extends ViewGroup {
 	/** 滑动的速度要大于该阈值，才进行屏幕切换 */
 	private static final int VELOCITY_THRESHOLD = 500;
 	
-	/** 滑动到另一屏幕的时间 */
-	private static final int SCREEN_SCROLL_DURATION = 500;
+	/** 滑动到另一屏幕的时间的上限 */
+	private static final int SCREEN_SCROLL_DURATION_UP = 500;
+	
+	/** 滑动到另一屏幕时间的下限 */
+	private static final int SCREEN_SCROLL_DURATION_DOWN = 200;
 	
 	public PagedView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -222,14 +225,16 @@ public abstract class PagedView extends ViewGroup {
 			 * X轴的速度，px/s；正值手指往右滑，负值往左滑。
 			 */
 			int iVelocityX = (int) velocityTracker.getXVelocity(iActivityPointId);
-//			Utils.log(TAG+"Velocity", "iVelocityX[x轴的速度]=%d", iVelocityX);
+			Utils.log(TAG+"Velocity", "iVelocityX[x轴的速度]=%d", iVelocityX);
 			boolean isFling =( Math.abs(iVelocityX)>VELOCITY_THRESHOLD) && (m_iTotalMoveX>MIN_LENGTH_FOR_FLING); 
 			if (isFling) {
 				//fling to another screen
-				
+				int direction = iVelocityX>0 ? 0 : 1;
+				flingToAnthorScreen(direction, iVelocityX);
 			} else {
 				//scroll to nearest screen
-				
+				int direction = iVelocityX>0 ? 0 : 1;
+				sliceToNeaestScreen();
 			}
 			
 			m_iCurTouchState = TOUCH_STATE_REST;
@@ -242,6 +247,7 @@ public abstract class PagedView extends ViewGroup {
 			if (m_iCurTouchState == TOUCH_STATE_SCROLING) {
 				//TODO 
 				//滑向最近的屏幕
+				sliceToNeaestScreen();
 			}
 			m_iCurTouchState = TOUCH_STATE_REST;
 			m_iCurPointId = INVALID_POINT_ID;
@@ -263,23 +269,96 @@ public abstract class PagedView extends ViewGroup {
 	private void flingToAnthorScreen(int direction, int velocity) {
 		final int iPrev = 0;
 		final int iNext = 1;
-		final int iCurScreen = m_iCurScreen;
 		final int iTotalScreen = getScreenCounts();
+		final int iXCompasaton = m_iScrollXCompasation;
+		int iScrollDuration = getDurationAcorrdingVelocity(velocity);
 		
-		if ( (direction==iPrev) && (iCurScreen==0)) {
+		Utils.log(TAG, "屏幕%s滑，m_iCurScreen=%d, iXcompasation=%d, iScrollDuration=%d", direction==iPrev?"左":"右", m_iCurScreen, iXCompasaton, iScrollDuration);
+		
+		if ( (direction==iPrev) && (m_iCurScreen==0)) {
+			Utils.log(TAG, "最左边");
 			return;
 		}
 		
-		if ( (direction==iNext) && (iCurScreen==iTotalScreen-1)) {
+		if ( (direction==iNext) && (m_iCurScreen==iTotalScreen-1)) {
+			Utils.log(TAG, "最右边");
 			return;
 		}
 		
 		if (direction == iPrev) {
-			m_Scroller.startScroll(getScrollX(), 0, dx, 0, SCREEN_SCROLL_DURATION);
+			m_iCurScreen -= 1;
+			sliceOrfingToScreen(m_iCurScreen, iScrollDuration);
 		} else {
-			
+			m_iCurScreen += 1;
+			sliceOrfingToScreen(m_iCurScreen, iScrollDuration);
 		}
 		
+		invalidate();
+	}
+	
+	/**
+	 * 根据速度来映射滑动时间
+	 * @param velocity
+	 */
+	private int getDurationAcorrdingVelocity(int velocity) {
+		//TODO 这里更理想的是，加入要滑动距离这个参数，就像Launcher中处理的一样
+		final int x2 = m_iMaximumVelocity;
+		final int x1 = VELOCITY_THRESHOLD;
+		final int y2 = SCREEN_SCROLL_DURATION_DOWN;
+		final int y1 = SCREEN_SCROLL_DURATION_UP;
+
+		velocity = Math.abs(velocity);
+		
+		int iDuration = ((velocity-x1) / (x2-x1) ) * (y2-y1) + y1;
+		
+		return iDuration;
+	}
+	
+	/**
+	 * 滑向最近的屏幕
+	 * @param direction 0为手指往右滑，屏幕左移，1为屏幕右移
+	 */
+	private void sliceToNeaestScreen() {
+		final String tag = TAG + "slice";
+		final int iCurScrollX = getScrollX();
+		final int iCurScreenLeft = m_iCurScreen*getScreenWidth();
+		final int iThesold = getScreenWidth()  / 3;
+		final int iDuration = SCREEN_SCROLL_DURATION_DOWN;
+
+		Utils.log(tag, "slice to neaset screen. iCurSceen=%d, iCurScrollX=%d, iCurScreenLeft=%d", m_iCurScreen, iCurScrollX, iCurScreenLeft);
+		
+		
+		if (iCurScreenLeft-iCurScrollX > iThesold) {
+			//上一页
+			if (m_iCurScreen <= 0) {
+				return;
+			}
+			m_iCurScreen -= 1;
+			sliceOrfingToScreen(m_iCurScreen, iDuration);
+		} else if (iCurScrollX-iCurScreenLeft > iThesold) {
+			//下一页
+			if (m_iCurScreen >= getScreenCounts()-1) {
+				return;
+			}
+			m_iCurScreen += 1;
+			sliceOrfingToScreen(m_iCurScreen, iDuration);
+		} else {
+			//当前页
+			sliceOrfingToScreen(m_iCurScreen, iDuration);
+		}
+		
+		
+	}
+	
+	private void sliceOrfingToScreen(int whichPage, int duration) {
+		Utils.log(TAG, "sliceOrfingToScreen");
+		final int iFinalX = whichPage * getScreenWidth();
+		int iXCompasation = m_iScrollXCompasation;
+		int iDx = iFinalX - iXCompasation;
+		
+		m_Scroller.startScroll(iXCompasation, 0, iDx, 0, duration);
+		
+		invalidate();
 	}
 	
 	@Override
@@ -307,8 +386,8 @@ public abstract class PagedView extends ViewGroup {
 		super.computeScroll();
 		if (m_Scroller.computeScrollOffset() ) {
 			scrollTo(m_Scroller.getCurrX(), 0);
+			invalidate();
 		}
-		
 		
 	}
 	
@@ -407,6 +486,9 @@ public abstract class PagedView extends ViewGroup {
 	 * 
 	 */
 	
+	private int getScreenWidth() {
+		return m_iScreenWidth;
+	}
 	
 	/**一共有多少个屏幕 */
 	protected abstract int getScreenCounts();

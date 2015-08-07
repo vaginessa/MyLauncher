@@ -49,6 +49,8 @@ public class CellInfo {
 	/** 格子所代表的类型 */
 	private CellType type;
 
+	/** 所在的屏幕 */
+	private int screen;
 	
 	public CellInfo() {
 
@@ -117,15 +119,29 @@ public class CellInfo {
 	public void setType(CellType type) {
 		this.type = type;
 	}
+	
+	/**
+	 * 返回所处的是第几个屏幕
+	 * @return
+	 */
+	public int getScreen() {
+		return this.screen;
+	}
+	
+	/**
+	 * 设置所处的是第几个屏幕
+	 * @param screen
+	 */
+	public void setScreen(int screen) {
+		this.screen = screen;
+	}
 
 	@Override
 	public String toString() {
 		return "CellInfo [view=" + view + ", intent=" + intent + ", cellX="
 				+ cellX + ", cellY=" + cellY + ", cellHSpan=" + cellHSpan
 				+ ", cellVSpan=" + cellVSpan + ", iconName=" + iconName
-				+ ", type=" + type + "]";
+				+ ", type=" + type + ", screen=" + screen + "]";
 	}
 
-	
-	
 }

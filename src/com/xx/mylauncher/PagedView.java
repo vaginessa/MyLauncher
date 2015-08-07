@@ -509,6 +509,13 @@ public abstract class PagedView extends ViewGroup {
 		return m_iScreenWidth;
 	}
 	
+	/**
+	 * 返回当前所处的是第几个屏幕
+	 * @return
+	 */
+	public int getCurScreenIndicator() {
+		return m_iCurScreen;
+	}
 	
 	/**一共有多少个屏幕 */
 	protected abstract int getScreenCounts();

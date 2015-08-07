@@ -134,8 +134,10 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 */
 	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan, final AppInfo appInfo, final View view) {
 		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
-		
+		final int iCurScreen = m_Workspace.getCurScreenIndicator();
+				
 		CellInfo cellInfo = new CellInfo();
+		cellInfo.setScreen(iCurScreen);
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellVSpan(cellVSpan);
 		cellInfo.setCellX(cellX);
@@ -164,8 +166,10 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 */
 	private void addWidgetInCellLayout(final View widgetView, final AppWidgetProviderInfo info, int cellX, int cellY, int cellHSpan, int cellVSpan) {
 		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		final int iCurScreen = m_Workspace.getCurScreenIndicator();
 		
 		CellInfo cellInfo = new CellInfo();
+		cellInfo.setScreen(iCurScreen);
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellVSpan(cellVSpan);
@@ -229,9 +233,11 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	
 	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan) {
 		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
+		final int iCurScreen = m_Workspace.getCurScreenIndicator();
 		
 		View v = new View(this);
 		CellInfo cellInfo = new CellInfo();
+		cellInfo.setScreen(iCurScreen);
 		cellInfo.setCellHSpan(cellHSpan);
 		cellInfo.setCellVSpan(cellVSpan);
 		cellInfo.setCellX(cellX);

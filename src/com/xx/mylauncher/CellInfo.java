@@ -52,6 +52,13 @@ public class CellInfo {
 	/** 所在的屏幕 */
 	private int screen;
 	
+	/** 代表HotSeat中的水平格子位置 */
+	private int hotSeatCellX;
+	
+	/** 代表HotSeat中的垂直格子位置 */
+	private int hotSeatCellY;
+	
+	
 	public CellInfo() {
 
 	}
@@ -135,13 +142,31 @@ public class CellInfo {
 	public void setScreen(int screen) {
 		this.screen = screen;
 	}
+	
+	public int getHotSeatCellX() {
+		return hotSeatCellX;
+	}
+
+	public void setHotSeatCellX(int hotSeatCellX) {
+		this.hotSeatCellX = hotSeatCellX;
+	}
+
+	public int getHotSeatCellY() {
+		return hotSeatCellY;
+	}
+
+	public void setHotSeatCellY(int hotSeatCellY) {
+		this.hotSeatCellY = hotSeatCellY;
+	}
 
 	@Override
 	public String toString() {
 		return "CellInfo [view=" + view + ", intent=" + intent + ", cellX="
 				+ cellX + ", cellY=" + cellY + ", cellHSpan=" + cellHSpan
 				+ ", cellVSpan=" + cellVSpan + ", iconName=" + iconName
-				+ ", type=" + type + ", screen=" + screen + "]";
+				+ ", type=" + type + ", screen=" + screen + ", hotSeatCellX="
+				+ hotSeatCellX + ", hotSeatCellY=" + hotSeatCellY + "]";
 	}
+
 
 }

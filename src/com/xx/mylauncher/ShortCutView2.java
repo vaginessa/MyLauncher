@@ -1,6 +1,7 @@
 package com.xx.mylauncher;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -40,12 +41,21 @@ public class ShortCutView2 extends FrameLayout {
 		m_ImgView.setImageDrawable(icon);
 	}
 	
+	public void setIcon(Bitmap bitmap) {
+		m_ImgView.setImageBitmap(bitmap);
+	}
+	
+	public void setIconBackground(Drawable drawable) {
+		m_ImgView.setBackground(drawable);
+	}
+	
 	public void setLabel(String label) {
 		m_TxvLabel.setText(label);
 	}
 	
-	
-	
+	public void setLabelVisibility(int visibility) {
+		m_TxvLabel.setVisibility(visibility);
+	}
 	
 
 }

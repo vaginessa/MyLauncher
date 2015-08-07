@@ -32,4 +32,14 @@
         
     </declare-styleable>
     
+    <!-- 定义HotSeat的一些属性 -->
+    <declare-styleable name="HotSeat">
+        <!-- 控件高度的内偏移量Top -->
+        <attr name="hotseat_offset_top" format="dimension" />
+        <!-- 控件高度的内偏移量Bottom -->
+        <attr name="hotseat_offset_bottom" format="dimension" />
+        <!-- 格子间的间隔 -->
+        <attr name="hotseat_space"  format="dimension" />
+    </declare-styleable>
+    
 </resources>

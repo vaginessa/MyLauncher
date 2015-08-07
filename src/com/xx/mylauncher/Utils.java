@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -158,6 +160,25 @@ public class Utils {
 		
 		return result;
 	}
+	
+	
+	public static StateListDrawable getStateListDrawable(Context context, Drawable normalDrawable, Drawable pressDrawable) {
+		StateListDrawable stateListDrawable = new StateListDrawable();
+		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, pressDrawable);
+		stateListDrawable.addState(new int[]{}, normalDrawable);
+		
+		return stateListDrawable;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

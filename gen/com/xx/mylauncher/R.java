@@ -73,6 +73,39 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
 "<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
          */
         public static final int foreground_color=0x7f01000a;
+        /**  控件高度的内偏移量Bottom 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int hotseat_offset_bottom=0x7f01000d;
+        /**  控件高度的内偏移量Top 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int hotseat_offset_top=0x7f01000c;
+        /**  格子间的间隔 
+         <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+         */
+        public static final int hotseat_space=0x7f01000e;
         /**  圆圈个数 
          <p>Must be an integer value, such as "<code>100</code>".
 <p>This may also be a reference to a resource (in the form
@@ -139,7 +172,9 @@ containing a value of this type.
         public static final int activity_vertical_margin=0x7f050001;
     }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
+        public static final int ic_allapps=0x7f020000;
+        public static final int ic_allapps_pressed=0x7f020001;
+        public static final int ic_launcher=0x7f020002;
     }
     public static final class id {
         public static final int action_settings=0x7f09000e;
@@ -207,6 +242,77 @@ containing a value of this type.
         public static final int AppTheme=0x7f070001;
     }
     public static final class styleable {
+        /**  定义HotSeat的一些属性 
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #HotSeat_hotseat_offset_bottom com.xx.mylauncher:hotseat_offset_bottom}</code></td><td> 控件高度的内偏移量Bottom </td></tr>
+           <tr><td><code>{@link #HotSeat_hotseat_offset_top com.xx.mylauncher:hotseat_offset_top}</code></td><td> 控件高度的内偏移量Top </td></tr>
+           <tr><td><code>{@link #HotSeat_hotseat_space com.xx.mylauncher:hotseat_space}</code></td><td> 格子间的间隔 </td></tr>
+           </table>
+           @see #HotSeat_hotseat_offset_bottom
+           @see #HotSeat_hotseat_offset_top
+           @see #HotSeat_hotseat_space
+         */
+        public static final int[] HotSeat = {
+            0x7f01000c, 0x7f01000d, 0x7f01000e
+        };
+        /**
+          <p>
+          @attr description
+           控件高度的内偏移量Bottom 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:hotseat_offset_bottom
+        */
+        public static final int HotSeat_hotseat_offset_bottom = 1;
+        /**
+          <p>
+          @attr description
+           控件高度的内偏移量Top 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:hotseat_offset_top
+        */
+        public static final int HotSeat_hotseat_offset_top = 0;
+        /**
+          <p>
+          @attr description
+           格子间的间隔 
+
+
+          <p>Must be a dimension value, which is a floating point number appended with a unit such as "<code>14.5sp</code>".
+Available units are: px (pixels), dp (density-independent pixels), sp (scaled pixels based on preferred font size),
+in (inches), mm (millimeters).
+<p>This may also be a reference to a resource (in the form
+"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
+theme attribute (in the form
+"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
+containing a value of this type.
+          <p>This is a private symbol.
+          @attr name com.xx.mylauncher:hotseat_space
+        */
+        public static final int HotSeat_hotseat_space = 2;
         /** Attributes that can be used with a Launcher.
            <p>Includes the following attributes:</p>
            <table>

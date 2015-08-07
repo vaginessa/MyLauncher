@@ -445,7 +445,9 @@ public class DragController {
 	
 	
 	
-	
+	public MainActivity getLauncher() {
+		return m_Launcher;
+	}
 	
 
 	/**

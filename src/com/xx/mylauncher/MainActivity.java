@@ -40,6 +40,9 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 
 	private WidgetManager m_WidgetManager;
 	
+	/** 多屏滑动指示器 */
+	private SlideIndicator m_SlideIndicator;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -48,6 +51,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_DragLayer = (DragLayer) findViewById(R.id.dragLayout);
 		m_Workspace = (Workspace) findViewById(R.id.workspace);
 		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
+		m_SlideIndicator = (SlideIndicator) findViewById(R.id.slideIndicator);
 		m_DragController = new DragController(this, this );
 		
 		m_DragLayer.setDragController(m_DragController);
@@ -368,6 +372,11 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	public Workspace getWorkspace() {
 		return m_Workspace;
 	}
+	
+	public SlideIndicator getSlideIndicator() {
+		return m_SlideIndicator;
+	}
+	
 	
 	/**
 	 * 获取显示所有程序的自定义对话框

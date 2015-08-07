@@ -54,8 +54,16 @@ public class SlideIndicator extends View {
 	private int m_iScreenHeight;
 	
 	private ValueAnimator m_ValueAnimator;
-	/** 是否启用动画 */
-	private boolean m_bIsAnim = false;;
+	/** 动画类型 */
+	private int m_iAnimType = ANIM_NOANIM;
+	
+	/** 不起用动画 */
+	private static final int ANIM_NOANIM = 1;
+	/** 启用平滑动画 */
+	private static final int ANIM_SCROLLANIM = 2;
+	/** 启用跟随动画 */
+	private static final int ANIM_FOLLOWANIM = 3;
+	
 	/** 当启动动画时{@link #m_bIsAnim}，该值表示动画中的圆圈的x坐标 */
 	private float m_fCurX;
 	/** 滑动的动画时间 */
@@ -68,6 +76,12 @@ public class SlideIndicator extends View {
 	
 	/** 上一次指示的是第几个 */
 	private int m_iLastInditor = 0;
+	
+	/** 跟随时的当前指示器 */
+	private int m_iFollowCurInditor;
+	
+	/** 跟随时的间隔偏移量 */
+	private int m_iFollowCurSpace;
 	
 	public SlideIndicator(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -169,10 +183,13 @@ public class SlideIndicator extends View {
 			canvas.drawCircle(getDrawStartX(i), iMidHeight, m_iRadius, m_PaintBg);
 		}
 		
-		if (!m_bIsAnim) {
+		if (m_iAnimType == ANIM_NOANIM) {
 			canvas.drawCircle(getDrawStartX(m_iCurInditor), iMidHeight, m_iRadius, m_paintFg);
-		} else {
+		} else if (m_iAnimType == ANIM_SCROLLANIM) {
 			canvas.drawCircle(m_fCurX, iMidHeight, m_iRadius, m_paintFg);
+		} else if (m_iAnimType == ANIM_FOLLOWANIM) {
+			float iCx = getDrawStartX(m_iFollowCurInditor) + m_iFollowCurSpace;
+			canvas.drawCircle(iCx, iMidHeight, m_iRadius, m_paintFg);
 		}
 		
 	}
@@ -219,11 +236,43 @@ public class SlideIndicator extends View {
 	}
 	
 	/**
+	 * 更新控件，和多屏对应跟随
+	 * @param scrollerX	控件内容滚动了多少
+	 * @param 一个屏的大小
+	 */
+	public void updateInditor(int scrollerX, int screenWidth) {
+		m_iAnimType = ANIM_FOLLOWANIM;
+		
+		int iCurInditor = scrollerX / screenWidth;
+		int remainder = scrollerX % screenWidth;
+		/*
+		 * 把remainder映射为space
+		 */
+		int iSpace = mapping(screenWidth, remainder);
+		
+		m_iFollowCurInditor = iCurInditor;
+		m_iFollowCurSpace = iSpace;
+		
+		invalidate();
+	}
+	
+	private int mapping(int screendWidth, int remainder) {
+		final int iSpace = m_iSpace + m_iRadius * 2;
+		float fScale = (float)remainder / (float)screendWidth;
+		
+		int iValue = (int) (fScale * iSpace);
+
+		return iValue; 
+	}
+	
+	
+	/**
 	 * 更新控件
 	 * @param isAnim
 	 */
 	private void updateIndicator(boolean isAnim) {
 		if (!isAnim) {
+			m_iAnimType = ANIM_NOANIM;
 			invalidate();
 			return;
 		}
@@ -242,12 +291,14 @@ public class SlideIndicator extends View {
 			@Override
 			public void onAnimationEnd(Animator animation) {
 				super.onAnimationEnd(animation);
-				m_bIsAnim = false;
+//				m_bIsAnim = false;
+				m_iAnimType = ANIM_NOANIM;
 			}
 			@Override
 			public void onAnimationStart(Animator animation) {
 				super.onAnimationStart(animation);
-				m_bIsAnim = true;
+//				m_bIsAnim = true;
+				m_iAnimType = ANIM_SCROLLANIM;
 			}
 		});
 		m_ValueAnimator.addUpdateListener(new AnimatorUpdateListener() {

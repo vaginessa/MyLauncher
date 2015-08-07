@@ -79,6 +79,9 @@ public abstract class PagedView extends ViewGroup {
 	/** 滑动到另一屏幕时间的下限 */
 	private static final int SCREEN_SCROLL_DURATION_DOWN = 200;
 	
+	/** 多屏滑动指示器 */
+	private SlideIndicator m_SlideIndicator;
+	
 	public PagedView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
@@ -373,14 +376,30 @@ public abstract class PagedView extends ViewGroup {
 		if (x<0) {
 			m_iScrollXCompasation = 0;
 			super.scrollTo(0, y);
+			updateInditor(0);
 		} else if (x>iMaxValue ) {
 			m_iScrollXCompasation = iMaxValue;
 			super.scrollTo(iMaxValue, y);
+			updateInditor(iMaxValue);
 		} else {
 			super.scrollTo(x, y);
+			updateInditor(x);
 		}
 	}
 	
+	/**
+	 * 更新指示器
+	 * @param scrollX
+	 */
+	private void updateInditor(int scrollX) {
+		final int iScreenWidth = getScreenWidth();
+		
+		if (m_SlideIndicator == null) {
+			m_SlideIndicator = getLauncher().getSlideIndicator();
+		}
+		m_SlideIndicator.updateInditor(scrollX, iScreenWidth);
+	}
+
 	@Override
 	public void computeScroll() {
 		super.computeScroll();
@@ -495,7 +514,7 @@ public abstract class PagedView extends ViewGroup {
 	/** 得到Workspace的总宽度 */
 	protected abstract int getWorkspaceWidth();
 	
-	
+	protected abstract MainActivity getLauncher();
 	
 	
 	

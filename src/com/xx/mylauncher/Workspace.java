@@ -307,5 +307,9 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		return (iCounts-1)*iUnitSize;
 	};
 	
+	@Override
+	protected MainActivity getLauncher() {
+		return m_DragController.getLauncher();
+	}
 	
 }

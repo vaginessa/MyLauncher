@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 
 /**
@@ -26,6 +29,8 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 
 	private static final boolean DEBUG = true;
 
+	private boolean m_bIsDropEnable = true;
+	
 	private static final float HEIGHT_SCALE = 5/6f;
 	
 	/** 屏幕的宽度 */
@@ -248,9 +253,8 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 			return;
 		}
 		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
-		if (source == this) {	//source instanceof Workspace ...
-			curCellLayout.onDrop(source, x, y, xOffset, yOffset, dragView, dragInfo);
-		}
+		
+		curCellLayout.onDrop(source, x, y, xOffset, yOffset, dragView, dragInfo);
 		
 	}
 
@@ -314,6 +318,40 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		return false;
 	}
 
+	
+	@Override
+	public boolean isDropEnable() {
+		return m_bIsDropEnable;
+	}
+	
+	
+	@Override
+	public void getHitRectRefDragLayer(Rect outRect, DropTarget dropTarget) {
+		final int iMax = 1000;
+		
+		ViewParent viewParent = dropTarget.getParent();
+		Object objLastView = dropTarget;
+		for (int i=0; i<iMax; i++) {
+			if (viewParent instanceof DragLayer) {
+//				Utils.log(TAG, "getHitRectRefDragLayer 计算好了. i=%d", i);
+				ViewGroup view = (ViewGroup) objLastView;
+				view.getHitRect(outRect);
+				break;
+			}
+			
+			objLastView = viewParent;
+			viewParent = viewParent.getParent();
+			
+			if (i>=iMax) {
+				Utils.log(TAG, "[getHitRectRefDragLayer] 这个方法写错了!!!!");
+				throw new IllegalArgumentException(String.format("布局层次超过了%d层，请优化或修改最大值", iMax));
+			}
+		}//end for
+		
+	}
+	
+	
+	
 	@Override
 	protected int getScreenCounts() {
 		return m_ListCellLayout.size();

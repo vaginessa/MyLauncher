@@ -187,6 +187,7 @@ public class DragLayer extends LinearLayout {
 		
 		/*
 		 * 拖动的dragview绘画提示，这个不应该放在这里
+		 * 是由 DragView#move()方法中过来的，强烈更改至dispatchDraw中去绘画
 		 */
 		View child;
 		DragLayer.LayoutParams lp;

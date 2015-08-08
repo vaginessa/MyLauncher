@@ -1,6 +1,7 @@
 package com.xx.mylauncher;
 
 import android.graphics.Rect;
+import android.view.View;
 import android.view.ViewParent;
 
 /**
@@ -76,9 +77,24 @@ public interface DropTarget {
     boolean acceptDrop(DragSource source, int x, int y, int xOffset, int yOffset,
             DragView dragView, Object dragInfo);
     
+    /**
+     * 是否开启了放置功能
+     * @return
+     */
+    boolean isDropEnable();
     
-    
-    
+    /**
+     * 这个是扩展用的，是因为没写出满足条件的布局（即DragLayer[Workspace, HotSeat(DeleteZone)]），如果去实现这样直接的<br/>
+     * 嵌套布局，则使用{@link #getHitRect(Rect)} 更方便，但是该函数同样适用。Drop-in<br/>
+     * 
+     * 如何实现这个：<br/>
+     * (1)遍历搜索【深度优先】<br/>
+     * (2)尝试 view.getParent来判断，可行的话，就简单了<br/>
+     * 第二种方法可行
+     * 
+     * @param outRect
+     */
+    void getHitRectRefDragLayer(Rect outRect, DropTarget dropTarget);
     
     /*
      * 在View中实现

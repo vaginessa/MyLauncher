@@ -540,10 +540,6 @@ public class CellLayout extends ViewGroup {
 		final DragObjectInfo dragObjectInfo = m_DragObjectInfo;
 		m_DragObjectInfo.reset();
 		
-		if (! (dragInfo instanceof CellInfo)) {
-			Utils.log(TAG, "fuckdddd");
-		}
-		
 		//TODO
 		//注意DragView是拖动的View，不是原来的Item View，因为可能会改动DragView来满足效果
 		if (dragInfo instanceof CellInfo) {
@@ -639,6 +635,7 @@ public class CellLayout extends ViewGroup {
 				}
 				
 				dragObjectInfo.itemView = cellInfo.getView();
+				dragObjectInfo.dragView = dragView;
 				
 				//可以完全映射
 				dragObjectInfo.cellX = iOffLeftArea;
@@ -870,6 +867,8 @@ public class CellLayout extends ViewGroup {
 		/** item view */
 		public View itemView;
 		
+		/** drag view */
+		public View dragView;
 		
 		public void reset() {
 			isInvalid = false;

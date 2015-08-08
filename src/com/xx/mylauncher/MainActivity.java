@@ -36,6 +36,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	
 	private DragController m_DragController;
 	
+	private HotSeat m_HotSeat;
+	
 	private AppManager m_AppManager;
 
 	private WidgetManager m_WidgetManager;
@@ -50,16 +52,21 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		m_DragLayer = (DragLayer) findViewById(R.id.dragLayout);
 		m_Workspace = (Workspace) findViewById(R.id.workspace);
+		m_HotSeat = (HotSeat) findViewById(R.id.hotseat);
 //		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
 		m_SlideIndicator = (SlideIndicator) findViewById(R.id.slideIndicator);
 		m_DragController = new DragController(this, this );
 		
 		m_DragLayer.setDragController(m_DragController);
 		m_DragController.registerDropTarget(m_Workspace);	//别忘记注册添加
+		m_DragController.registerDropTarget(m_HotSeat);
 //		m_CellLayout.setLauncher(this);	//TODO 先这样添加
 		m_Workspace.setDragController(m_DragController);
 		m_Workspace.setDragLayer(m_DragLayer);
 //		m_Workspace.setOnLongClickListener(this);
+		m_HotSeat.setDragLayer(m_DragLayer);
+		
+		
 		m_Workspace.post(new Runnable() {
 			
 			@Override
@@ -145,6 +152,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		cellInfo.setIconName(appInfo.getLabelName());
 		cellInfo.setIntent(appInfo.getIntent());
 		cellInfo.setType(CellInfo.CellType.SHORT_CUT);
+		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
@@ -177,6 +185,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		cellInfo.setCellY(cellY);
 		cellInfo.setIconName("");
 		cellInfo.setType(CellInfo.CellType.WIDGET);
+		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setView(widgetView);
 		widgetView.setTag(cellInfo);
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
@@ -243,6 +252,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		cellInfo.setCellX(cellX);
 		cellInfo.setCellY(cellY);
 		cellInfo.setIconName("icon name");
+		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setIntent(new Intent());
 		CellInfo.CellType type = cellHSpan > 1 || cellVSpan>1 ? CellInfo.CellType.WIDGET : CellInfo.CellType.SHORT_CUT;
 		cellInfo.setType(type);
@@ -285,15 +295,22 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		Object tag = v.getTag();
 		
-		if (tag != null) {
-			Utils.log(true, TAG, "%s", tag.toString());
-		}
-		
 		if (tag instanceof CellInfo) {
 			CellInfo cellInfo = (CellInfo) tag;
 			Utils.log(true, TAG, "图标项或widget项. Type is %s", cellInfo.getType().name() );
 			
-			m_DragController.startDrag(v, m_Workspace, v.getTag(), Constant.DRAG_MOVE);
+			final DragSource dragSource;
+			if (cellInfo.getLocation() == CellInfo.CellLocation.WORKSPACE ) {
+				dragSource = m_Workspace;
+				
+			} else if (cellInfo.getLocation() == CellInfo.CellLocation.HOTSEAT) {
+				dragSource = m_HotSeat;
+				
+			} else {
+				dragSource = null;
+			}
+			
+			m_DragController.startDrag(v, dragSource, v.getTag(), Constant.DRAG_MOVE);
 			
 			return true;
 			
@@ -395,6 +412,11 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	public SlideIndicator getSlideIndicator() {
 		return m_SlideIndicator;
 	}
+	
+	public HotSeat getHotSeat() {
+		return m_HotSeat;
+	}
+	
 	
 	
 	/**

@@ -149,11 +149,16 @@ public class DragController {
 		m_DragSource = source;
 		
 		//TODO 是否选择这个位置，要重新考虑
-		if (dragInfo instanceof CellInfo) {
+		if ( (dragInfo instanceof CellInfo) && (source instanceof Workspace) ) {
 			CellInfo cellInfo = (CellInfo) dragInfo;
 			m_Launcher.getWorkspace().getCurScreen().clearFlagsOcupied(cellInfo.getCellX(), 
 					cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan());		
 		}
+		
+		if ( (source instanceof HotSeat) && (dragInfo instanceof CellInfo) ) {
+			CellInfo cellInfo = (CellInfo) dragInfo;
+			m_Launcher.getHotSeat().clearFlagOcupid(cellInfo);
+		} 
 		
 		m_Vibrator.vibrate(VIBRATE_DURATION);
 		DragView dragView = m_DragViewCur = new DragView(m_Context, b, m_Launcher, screenX, screenY, m_iRawX, m_iRawY);
@@ -221,7 +226,7 @@ public class DragController {
 			
 			break;
 		case MotionEvent.ACTION_MOVE:
-			
+//			Utils.log(TAG, "onInterceptToucherEvent-action_move");
 			
 			break;
 		case MotionEvent.ACTION_UP:
@@ -229,7 +234,7 @@ public class DragController {
 			if (m_bIsDragging) {
 				drop(m_iRawX, m_iRawY);
 			}
-			endDrag();
+			endDrag();		//这里有个的疑问是，当没有拖拽的时候，如果但是它的子View有消费该事件（事实上也有），它将被调用
 			
 			break;
 		case MotionEvent.ACTION_CANCEL:
@@ -269,12 +274,7 @@ public class DragController {
 			final DropTarget findDropTarget = findDropTarget(screenX, screenY, coordinates);	
 			
 			if (findDropTarget != null) {
-				//TODO 加入判断是哪个DropTarget   --- instanceof ??
-				
-				if (findDropTarget instanceof Workspace) {
-//					Utils.toastAndlogcat(m_Context, TAG, "findDropTarget is Workspace");	//arrive here
-					
-				}
+				//TODO
 				
 				if (m_DropTargetLast == findDropTarget) {
 					findDropTarget.onDragOver(m_DragSource, coordinates[0], coordinates[1], m_iOffItemViewX, m_iOffItemViewY, m_DragViewCur, m_DragViewCur.getTag() );
@@ -328,14 +328,21 @@ public class DragController {
 		for (int i=0; i<dropTargetList.size(); i++) {
 			final DropTarget dropTarget = dropTargetList.get(i);
 			
+			if (!dropTarget.isDropEnable()) {
+				continue;
+			}
+			
 			//TODO 这里如果DragLayer不是在最左上角，可能会出错
+			//改用了不出错的方法 - 2015/8/8
 			//计算DragLayer的top_left 的偏移量?? 好像不会，通过画图分析
 			//一般，Launcher中的DragLayer和Workspace是match_parent，即是最左上角的
 			
 			/*
-			 * getHitRect方法是得到该View在父布局{DrapLayer}中的对角坐标，如果有titlebar则 (0, 0)是从titlebar下面开始记起的
+			 * getHitRect方法是得到该View在父布局{DrapLayer}中的对角坐标，前提是该View是DrapLayer的直接child view
+			 * 如果有titlebar则 (0, 0)是从titlebar下面开始记起的
 			 */
-			dropTarget.getHitRect(r);
+//			dropTarget.getHitRect(r);
+			dropTarget.getHitRectRefDragLayer(r, dropTarget);
 			
 			/*
 			 * getLocationOnScreen方法是得到该View在屏幕中的绝对坐标，包括状态栏的高度

@@ -20,6 +20,15 @@ public class CellInfo {
 	static enum CellType {
 		SHORT_CUT, WIDGET
 	}
+	
+	/**
+	 * Item View 所处的位置
+	 * @author baoxing
+	 *
+	 */
+	static enum CellLocation {
+		WORKSPACE, HOTSEAT
+	}
 
 	/** 代表的Item View */
 	private View view;
@@ -58,11 +67,13 @@ public class CellInfo {
 	/** 代表HotSeat中的垂直格子位置 */
 	private int hotSeatCellY;
 	
+	/** 所处的位置 */
+	private CellLocation location;
 	
 	public CellInfo() {
 
 	}
-
+	/** 代表的Item View */
 	public View getView() {
 		return view;
 	}
@@ -119,6 +130,10 @@ public class CellInfo {
 		this.iconName = iconName;
 	}
 
+	/**
+	 * 单元格类型，目前包括快捷图标和 widget
+	 * @return
+	 */
 	public CellType getType() {
 		return type;
 	}
@@ -158,15 +173,22 @@ public class CellInfo {
 	public void setHotSeatCellY(int hotSeatCellY) {
 		this.hotSeatCellY = hotSeatCellY;
 	}
-
+	public CellLocation getLocation() {
+		return location;
+	}
+	
+	public void setLocation(CellLocation location) {
+		this.location = location;
+	}
+	
 	@Override
 	public String toString() {
 		return "CellInfo [view=" + view + ", intent=" + intent + ", cellX="
 				+ cellX + ", cellY=" + cellY + ", cellHSpan=" + cellHSpan
 				+ ", cellVSpan=" + cellVSpan + ", iconName=" + iconName
 				+ ", type=" + type + ", screen=" + screen + ", hotSeatCellX="
-				+ hotSeatCellX + ", hotSeatCellY=" + hotSeatCellY + "]";
+				+ hotSeatCellX + ", hotSeatCellY=" + hotSeatCellY
+				+ ", location=" + location + "]";
 	}
-
 
 }

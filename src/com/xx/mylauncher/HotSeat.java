@@ -3,12 +3,18 @@ package com.xx.mylauncher;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.view.WindowManager;
+
+import com.xx.mylauncher.CellLayout.DragObjectInfo;
 
 /**
  * HotSeat，屏幕中固定的部分
@@ -18,10 +24,16 @@ import android.view.ViewGroup;
  * @author baoxing
  *
  */
-public class HotSeat extends ViewGroup {
+public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 
 	private static final String TAG = "HotSeat";
 
+	private boolean m_bIsDropEnable = true;
+	
+	private static final float HEIGHT_SCALE = 1/6f;
+	
+	private int m_iScreenWidth;
+	
 	/** 控件宽度 */
 	private int m_iHotSeatWidth;
 	
@@ -64,6 +76,14 @@ public class HotSeat extends ViewGroup {
 	/** 摆放HotSeat内容的左边偏移量 */
 	private int m_iOffsetLeft;
 	
+	/** 用来标志是否占用，true：占用 */
+	private boolean m_bOccupied[] = new boolean[CELL_COUNTS];
+	
+	private Rect m_TempRect = new Rect();
+	
+	/** 拖拽层 */
+	private DragLayer m_DragLayer;
+	
 	public HotSeat(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
@@ -95,6 +115,16 @@ public class HotSeat extends ViewGroup {
 
 		ta.recycle();
 		
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		wm.getDefaultDisplay().getMetrics(outMetrics);
+		m_iScreenWidth = outMetrics.widthPixels;
+		
+		for (int i=0; i<CELL_COUNTS; i++) {
+			m_bOccupied[i] = false;
+		}
+		
+		
 		loadAllAppView();
 	}
 	
@@ -122,6 +152,7 @@ public class HotSeat extends ViewGroup {
 				cellInfo.setHotSeatCellY(0);
 				cellInfo.setView(item);
 				item.setTag(cellInfo);
+				m_bOccupied[FIXED_NUM] = true;
 				
 				addView(item);
 			/*	//test
@@ -203,7 +234,43 @@ public class HotSeat extends ViewGroup {
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+//		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+		
+		/*
+		 * 测量自己的大小
+		 */
+		final int iParentWidthAction = MeasureSpec.getMode(widthMeasureSpec);
+		final int iParentWidthSize = MeasureSpec.getSize(widthMeasureSpec);
+		final int iParentHeightAction = MeasureSpec.getMode(heightMeasureSpec);
+		final int iParentheightSize = MeasureSpec.getSize(heightMeasureSpec);
+		final int iScreenWidth = m_iScreenWidth;
+		
+		int iSelfWidth;
+		int iSelfHeight;
+		
+		if ( (iParentWidthAction == MeasureSpec.AT_MOST) || (iParentWidthSize==MeasureSpec.UNSPECIFIED) ) {
+			Utils.log(TAG, "onMeausre-width-at_most||unspecified");
+			iSelfWidth = iScreenWidth;
+			
+		} else {
+			Utils.log(TAG, "onMeasure-width-excexty");
+			iSelfWidth = iParentWidthSize;
+		} 
+		
+		/*
+		 * 这里有个地方很奇怪，当拖动时，HotSeat的高度会变得很小(8)。这是为什么？？
+		 * 现在的做法是直接求得剩余的大小，设置进去
+		 */
+		iSelfHeight = getSpecifyHeight();
+		if ( (iParentWidthAction == MeasureSpec.AT_MOST) || (iParentWidthSize==MeasureSpec.UNSPECIFIED) ) {
+			Utils.log(TAG, "onMeausre-height-at_most||unspecified");
+			
+		} else {
+			Utils.log(TAG, "onMeasure-height-excexty");
+			
+		} 
+		
+		setMeasuredDimension(iSelfWidth, iSelfHeight);
 		
 		final int iViewWidth = getMeasuredWidth();
 		final int iViewHeight = getMeasuredHeight();
@@ -252,6 +319,284 @@ public class HotSeat extends ViewGroup {
 			child = getChildAt(i);
 			child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 		}
+		
+	}
+	
+	
+	private int getSpecifyHeight() {
+		int iStatusHegiht = Utils.getStatusHeight(getContext());
+		int iScaleHeight = (int) (m_iScreenWidth * HEIGHT_SCALE);
+		
+		Utils.log(TAG, "iStautsHeight=%d, iScaleHeight=%d, iScreenWidth=%d, HEIGHT_SCLAE=%f", iStatusHegiht, iScaleHeight, m_iScreenWidth, HEIGHT_SCALE);
+		return iScaleHeight + iStatusHegiht;
+	}
+	
+	/*
+	 * Setter / Getter
+	 */
+	public void setIsDropEnable(boolean isDropEnable) {
+		this.m_bIsDropEnable = isDropEnable;
+	}
+	
+	/**
+	 * 当拖拽开始时，清除它所占的单元格标志位
+	 * @param cellInfo
+	 */
+	public void clearFlagOcupid(CellInfo cellInfo) {
+		//TODO
+	}
+
+	@Override
+	public void setDragController(DragController dragger) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDragLayer(DragLayer dragLayer) {
+		this.m_DragLayer = dragLayer;
+	}
+
+	/*
+	 * 是DragSource的接口，注意理解
+	 * (non-Javadoc)
+	 * @see com.xx.mylauncher.DragSource#onDropCompleted(android.view.View, android.view.View, java.lang.Object, int, int, int, int, boolean)
+	 */
+	@Override
+	public void onDropCompleted(View dropTargetView, View dragView,
+			Object itemInfo, int rawX, int rawY, int iOffX, int iOffy,
+			boolean success) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onDrop(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		// TODO Auto-generated method stub
+		Utils.log(TAG, "onDrop");
+		final boolean[] bArrayOccupied = m_bOccupied;
+		final CellInfo cellInfo = (CellInfo) dragInfo;
+		final int iHotSeatCellY = 0;
+		final int iHotSeatCellX = getCellXAccordingCoordinateRefParent(x, y);
+		
+		if (iHotSeatCellX != -1) {
+			final ShortCutView2 itemView = (ShortCutView2) cellInfo.getView();
+
+			itemView.setLabelVisibility(View.GONE);
+			cellInfo.setHotSeatCellX(iHotSeatCellX);
+			cellInfo.setHotSeatCellY(iHotSeatCellY);
+			cellInfo.setLocation(CellInfo.CellLocation.HOTSEAT);
+			bArrayOccupied[iHotSeatCellX] = true;
+			
+			if (source instanceof Workspace) {
+				final Workspace workspace = (Workspace) source;
+				workspace.getCurCellLayout().removeView(itemView);
+				addView(itemView);
+			}
+			
+			requestLayout();
+		}
+		
+	}
+
+	@Override
+	public void onDragEnter(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		Utils.log(TAG, "onDragEnter");
+		CellInfo cellInfo = (CellInfo) dragInfo;
+		if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
+			/*
+			 * 把widget拖动到HotSeat
+			 * 给DragView设置红色的蒙板
+			 */
+			//TODO
+			
+		}
+		
+	}
+
+	private DragObjectInfo m_CurDragObjectInfo = new DragObjectInfo();
+	
+	/*
+	 * @param source	从哪里拖动过来的，拖动源
+	 * @param x	到父View的偏移量{@link DropTarget}，如workspace
+	 * @param y	到父View的偏移量{@link DropTarget}，如workspace
+	 * @param xOffset	到View本身的偏移量，即到长按下的View的偏移量
+	 * @param yOffset
+	 * @param dragView	拖动的View，绘制表现层在DragLayer中
+	 * @param dragInfo	拖动的View所携带的信息
+     * @return
+	 * (non-Javadoc)
+	 * @see com.xx.mylauncher.DropTarget#onDragOver(com.xx.mylauncher.DragSource, int, int, int, int, com.xx.mylauncher.DragView, java.lang.Object)
+	 */
+	@Override
+	public void onDragOver(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		/*
+		 * 通知DragLayer绘制提示框
+		 */
+		final CellInfo cellInfo = (CellInfo) dragInfo;
+		final DragObjectInfo dragObjectInfo = m_CurDragObjectInfo;
+		final boolean[] bArrayOccupid = m_bOccupied;
+		
+		dragObjectInfo.reset();
+		dragObjectInfo.itemView = cellInfo.getView();
+		dragObjectInfo.dragView = dragView;
+		
+		final int iTargetHotSeatCellX = getCellXAccordingCoordinateRefParent(x, y);
+		if (iTargetHotSeatCellX > -1) {	
+			final boolean bCanDrop = !bArrayOccupid[iTargetHotSeatCellX] && (cellInfo.getType()!=CellInfo.CellType.WIDGET);
+			dragObjectInfo.isInCell = true;
+			dragObjectInfo.isInvalid = true;
+			dragObjectInfo.canDrop = bCanDrop;
+//			adapterCoordinateToDragLayer(dragObjectInfo, x, y, xOffset, yOffset);
+			adapterCoordinateToDragLayer(dragObjectInfo, iTargetHotSeatCellX);
+			if (!bCanDrop) {
+				int[] iArrayOccupidItem = new int[]{iTargetHotSeatCellX, 0};
+				dragObjectInfo.flagOcupiedList.add(iArrayOccupidItem);
+			}
+		} else {	//在间隔中
+			dragObjectInfo.isInCell = false;
+			dragObjectInfo.isInvalid = false;
+			dragObjectInfo.canDrop = false;
+		}
+		
+		m_DragLayer.updateDragPreEffect(dragObjectInfo);
+	}
+	
+	/**
+	 * 根据相对于父控件 {@link HotSeat}的坐标转为相对于屏幕的坐标{@link DragLayer}。如果DragLayer不是整个屏幕，则有错<br/>
+	 * 并把坐标值和大小赋值给DragObjectInfo
+	 * @param dragObjectInfo
+	*  @param x	到父View的偏移量{@link DropTarget}，如workspace
+	 * @param y	到父View的偏移量{@link DropTarget}，如workspace
+	 */
+	private void adapterCoordinateToDragLayer(final DragObjectInfo dragObjectInfo, int x, int y, int xOffset, int yOffset) {
+		final int iCellHSpan = 1;
+		final int iCellVSpan = 1;
+		final int iCellWidth = m_iCellWidth;
+		final int iCellHeight = m_iCellHeight;
+		final int iSpace = m_iSpace;
+		
+		getHitRectRefDragLayer(m_TempRect, this);
+		
+		final int iLeft = m_TempRect.left + x - xOffset;
+		final int iTop = m_TempRect.top + y - yOffset;
+		
+		dragObjectInfo.x = iLeft;
+		dragObjectInfo.y = iTop;
+		dragObjectInfo.width = iCellWidth * iCellHSpan + (iCellHSpan-1) * iSpace;
+		dragObjectInfo.height = iCellHeight * iCellVSpan + (iCellVSpan-1) * iSpace;
+	}
+
+	private void adapterCoordinateToDragLayer(final DragObjectInfo dragObjectInfo, int whichCellX) {
+		final int iOffsetLeft = m_iOffsetLeft;
+		final int iSpace = m_iSpace;
+		final int iHeightOffsetTop = m_iHeightOffsetTop;
+		final int iCellWidth = m_iCellWidth;
+		final int iCellHeight = m_iCellHeight;
+		final int iCellY = 0;
+		
+		final int iLeft = whichCellX * iCellWidth + whichCellX * iSpace + iOffsetLeft;
+		final int iTop = iCellY * iCellHeight + iCellY * iSpace + iHeightOffsetTop;
+		
+		getHitRectRefDragLayer(m_TempRect, this);
+		
+		dragObjectInfo.x = iLeft + m_TempRect.left;
+		dragObjectInfo.y = iTop + m_TempRect.top;
+		dragObjectInfo.width = iCellWidth;
+		dragObjectInfo.height = iCellHeight;
+	}
+	
+	
+	@Override
+	public void onDragExit(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		// TODO Auto-generated method stub
+		Utils.log(TAG, "onDragExit");
+	}
+
+	@Override
+	public boolean acceptDrop(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		final CellInfo cellInfo = (CellInfo) dragInfo;
+		if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
+			return false;
+		}
+		
+		int iTargetHotSeatCellX = getCellXAccordingCoordinateRefParent(x, y);
+		
+		boolean bAcceptDrop = (iTargetHotSeatCellX!=-1) && !m_bOccupied[iTargetHotSeatCellX];
+		
+//		Utils.toastAndlogcat(getContext(), TAG, "%s, targetHotSeatCellX=%d", bAcceptDrop?"不占用":"占用", iTargetHotSeatCellX);
+		Utils.log(TAG, "%s, targetHotSeatCellX=%d", bAcceptDrop?"不占用":"占用", iTargetHotSeatCellX);
+		
+		return bAcceptDrop;
+	}
+	
+	/**
+	 * 根据相对于父控件的坐标偏移值，返回对应的是第几个单元格；如果没有对应，返回-1
+	 * @param x 相对于父控件的坐标值	HotSeat
+	 * @param y 相对于父控件的坐标值	HotSeat
+	 * @return
+	 */
+	private int getCellXAccordingCoordinateRefParent(int x, int y) {
+		final int iOffsetLeft = m_iOffsetLeft;
+		final int iHeightOffsetTop = m_iHeightOffsetTop;
+		final int iCellWidth = m_iCellWidth;
+		final int iCellHeight = m_iCellHeight;
+		final int iSpace = m_iSpace;
+		
+		int iTargetHotSeatCellX = -1;
+		
+		int left, top, right, bottom;
+		Rect r = new Rect();
+		for (int i=0; i<CELL_COUNTS; i++) {
+			left = iOffsetLeft + i * iCellWidth + i * iSpace;
+			top = iHeightOffsetTop;
+			right = left + iCellWidth;
+			bottom = top + iCellHeight;
+			r.set(left, top, right, bottom);
+			if (r.contains(x, y) ) {
+				iTargetHotSeatCellX = i;
+				break;
+			}
+		}
+		
+		return iTargetHotSeatCellX;
+	}
+	
+	@Override
+	public boolean isDropEnable() {
+		return m_bIsDropEnable;
+	}
+	
+	@Override
+	public void getHitRectRefDragLayer(Rect outRect, DropTarget dropTarget) {
+		final int iMax = 1000;
+		
+		ViewParent viewParent = dropTarget.getParent();
+		Object objLastView = dropTarget;
+		for (int i=0; i<iMax; i++) {
+			if (viewParent instanceof DragLayer) {
+//				Utils.log(TAG, "getHitRectRefDragLayer 计算好了");
+				ViewGroup view = (ViewGroup) objLastView;
+				view.getHitRect(outRect);
+				break;
+			}
+			
+			objLastView = viewParent;
+			viewParent = viewParent.getParent();
+			
+			if (i >= iMax) {
+				/*
+				 * 这里是输出log，还是抛出异常
+				 */
+				throw new IllegalArgumentException(String.format("布局层次超过了%d层，请优化或修改最大值", iMax));
+			}
+			
+		}//end for
 		
 	}
 	

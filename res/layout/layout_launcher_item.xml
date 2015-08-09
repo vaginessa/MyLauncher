@@ -9,9 +9,10 @@
     <ImageView
         android:contentDescription="@null"
         android:id="@+id/image_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@android:drawable/btn_star" />
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        
+        android:scaleType="fitCenter"  />
 
     <TextView
         android:id="@+id/txv_label"

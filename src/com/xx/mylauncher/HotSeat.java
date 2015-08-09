@@ -151,7 +151,7 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 				StateListDrawable stateListDrawable = Utils.getStateListDrawable(getContext(), normalDrawable, pressDrawable);
 				item.setIconBackground(stateListDrawable);
 				item.setLabelVisibility(View.GONE);
-				item.setIcon(normalDrawable);
+//				item.setIcon(normalDrawable);
 				item.setClickable(true);
 				CellInfo cellInfo = new CellInfo();
 				cellInfo.setHotSeatCellX(FIXED_NUM);

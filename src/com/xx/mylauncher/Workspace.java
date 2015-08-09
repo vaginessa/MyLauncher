@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -50,6 +52,10 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 	/** 保存有多少个屏幕 */
 	private List<CellLayout> m_ListCellLayout = new ArrayList<CellLayout>();
 	
+	private int m_iDeleteZoneHeight;
+	private int m_iHotSeatHeight;
+	private int m_iViewHeight;
+	
 	/** 当前所处的屏幕 */
 //	private int m_iCurScreen = 0;
 	
@@ -63,10 +69,10 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 
 	public Workspace(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		init(context);
+		init(context, attrs);
 	}
 	
-	private void init(Context context) {
+	private void init(Context context, AttributeSet set) {
 		final DisplayMetrics dm = new DisplayMetrics();
 		
 		m_WindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -74,9 +80,21 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		m_iScreenHeight = dm.heightPixels;
 		m_iScreenWidth = dm.widthPixels;
 		
+		m_iDeleteZoneHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constant.DIMEN_DEFAULT_DELETEZONE_HEIGHT, context.getResources().getDisplayMetrics());
+		m_iHotSeatHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constant.DIMEN_DEFAULT_HOTSEAT_HEIGHT, context.getResources().getDisplayMetrics());
+		
+		TypedArray ta = context.obtainStyledAttributes(set, R.styleable.Launcher);
+		m_iDeleteZoneHeight = (int) ta.getDimension(R.styleable.Launcher_w_deletezone_height, m_iDeleteZoneHeight);
+		m_iHotSeatHeight = (int) ta.getDimension(R.styleable.Launcher_w_hotseat_height, m_iHotSeatHeight);				
+		ta.recycle();
+
+		m_iViewHeight = m_iScreenHeight - m_iDeleteZoneHeight - m_iHotSeatHeight - Utils.getStatusHeight(getContext());
+		
+		Utils.log(TAG, "m_iViewHeight=%d, m_iDeleteZoneHeight=%d, m_iHotSeatHeight=%d", m_iViewHeight, m_iDeleteZoneHeight, m_iHotSeatHeight);
 		log("screenHeight=%d, screenWidth=%d", m_iScreenHeight, m_iScreenWidth);
 	}
 	
+	private String tag = TAG + "onMeasure";
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -95,15 +113,19 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		 * 测量高度
 		 */
 		if (iYMode == MeasureSpec.AT_MOST) {
+			Utils.log(tag, "at most");
 			iParentHeight = (int) Math.min(iYHeight, m_iScreenHeight*HEIGHT_SCALE);
 			
 		} else if (iYMode == MeasureSpec.EXACTLY) {
+			Utils.log(tag, "exactly");
 			iParentHeight = iYHeight;
 			
 		} else {
+			Utils.log(tag, "un..");
 			iParentHeight = (int) Math.min(iYHeight, m_iScreenHeight*HEIGHT_SCALE);
 			
 		}
+		Utils.log(tag, "iYHeight=%d", iYHeight);
 		/*
 		 * 测量宽度，就是屏幕的宽度 * 子View的个数(多少个屏幕)，不考虑其它情况
 		 * 
@@ -121,10 +143,17 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 			child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 		}
 		
-		log("iParentWidth[Workspace的宽度]=%d, iParentHeight[Workspace的高度]=%d", iParentWidth, iParentHeight);
-		log("screen height = %d, screen width = %d", m_iScreenHeight, m_iScreenWidth);
-		setMeasuredDimension(iParentWidth, iParentHeight);
+//		setMeasuredDimension(iParentWidth, iParentHeight);
+		/*
+		 * 为什么要指定特定的值
+		 * 因为，当使用系统自带的测量体系时，当拖动图标时，它不断的测量，但是在最终结果出来前，
+		 * 它的值不是单一的，所以workspace的大小会改变，导致效果不对
+		 */
+		setMeasuredDimension(iParentWidth, m_iViewHeight);
 		
+		
+		log("iParentWidth[Workspace的宽度]=%d, iParentHeight[Workspace的高度]=%d, iViewHeight=%d", iParentWidth, iParentHeight, m_iViewHeight);
+		log("screen height = %d, screen width = %d", m_iScreenHeight, m_iScreenWidth);
 	}
 
 	

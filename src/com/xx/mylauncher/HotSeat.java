@@ -66,6 +66,8 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 	
 	private static final int DIMEN_EDGE_SPACE = 10;	//dp
 	
+	private static final int DIMEN_HOTSEAT_HEIGHT = Constant.DIMEN_DEFAULT_HOTSEAT_HEIGHT;
+	
 	/** 指示那个格子固定 */
 	private static final int FIXED_NUM = 2;
 	
@@ -113,12 +115,15 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 		 */
 		final int iDimenSpace = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIMEN_SPACE, context.getResources().getDisplayMetrics());
 		final int iDimenEdgeSpace = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIMEN_EDGE_SPACE, context.getResources().getDisplayMetrics());
+		final int iDimenHotseatHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIMEN_HOTSEAT_HEIGHT, context.getResources().getDisplayMetrics());
+		
 		TypedArray ta = context.obtainStyledAttributes(set, R.styleable.HotSeat);
 		m_iHeightOffsetTop = (int) ta.getDimension(R.styleable.HotSeat_hotseat_offset_top, 0);
 		m_iHeightOffsetBottom = (int) ta.getDimension(R.styleable.HotSeat_hotseat_offset_bottom, 0);
 		m_iSpace = (int) ta.getDimension(R.styleable.HotSeat_hotseat_space, iDimenSpace);
 		m_iEdgeSpace = (int) ta.getDimension(R.styleable.HotSeat_hotseat_edge_space, iDimenEdgeSpace);
-
+		m_iHotSeatHeight = (int) ta.getDimension(R.styleable.HotSeat_hotseat_height, iDimenHotseatHeight);
+		
 		ta.recycle();
 		
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -267,21 +272,14 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 		 * 这里有个地方很奇怪，当拖动时，HotSeat的高度会变得很小(8)。这是为什么？？
 		 * 现在的做法是直接求得剩余的大小，设置进去
 		 */
-		iSelfHeight = getSpecifyHeight();
-		if ( (iParentWidthAction == MeasureSpec.AT_MOST) || (iParentWidthSize==MeasureSpec.UNSPECIFIED) ) {
-			Utils.log(TAG, "onMeausre-height-at_most||unspecified");
-			
-		} else {
-			Utils.log(TAG, "onMeasure-height-excexty");
-			
-		} 
+		iSelfHeight = m_iHotSeatHeight;
 		
 		setMeasuredDimension(iSelfWidth, iSelfHeight);
 		
 		final int iViewWidth = getMeasuredWidth();
 		final int iViewHeight = getMeasuredHeight();
 		
-		Utils.log(TAG, "[onMeasure]控件的: width=%d, height=%d", iViewWidth, iViewHeight);
+		Utils.log(TAG, "[onMeasure]控件的: width=%d, height=%d", iSelfWidth, iSelfHeight);
 		
 		m_iHotSeatWidth = iViewWidth;
 		m_iHotSeatHeight = iViewHeight;

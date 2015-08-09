@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -57,6 +58,8 @@ public class CellLayout extends ViewGroup {
 	
 	/** [行数VSpan][列数HSpan] */
 	private boolean m_bCellsOcupied[][];
+	
+	private Rect m_RectTemp = new Rect();
 	
 	/**Launcher 引用 *///TODO要修改
 	private MainActivity m_Launcher;
@@ -747,9 +750,13 @@ public class CellLayout extends ViewGroup {
 		final CellLayout.LayoutParams lp = (CellLayout.LayoutParams) cellInfo.getView().getLayoutParams();
 		final int cellX = info.cellX;
 		final int cellY = info.cellY;
+		final DropTarget dropTarget = m_Launcher.getWorkspace();
+		final Rect outRect = m_RectTemp;
 		
-		int left = (cellX + 1) * m_iSpaceHorizatation + cellX * m_iCellSize + lp.leftMargin + getPaddingLeft();
-		int top = (cellY + 1) * m_iSpaceVertical + cellY * m_iCellSize + lp.topMargin + getPaddingTop();
+		m_Launcher.getWorkspace().getHitRectRefDragLayer(outRect, dropTarget); 
+		
+		int left = (cellX + 1) * m_iSpaceHorizatation + cellX * m_iCellSize + lp.leftMargin + getPaddingLeft() + outRect.left;
+		int top = (cellY + 1) * m_iSpaceVertical + cellY * m_iCellSize + lp.topMargin + getPaddingTop() + outRect.top;
 		int width = cellInfo.getView().getMeasuredWidth();
 		int height = cellInfo.getView().getMeasuredHeight();
 		

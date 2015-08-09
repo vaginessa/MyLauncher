@@ -15,6 +15,10 @@
         <attr name="spaceVertical" format="dimension" />
         <!-- 单元格子的大小 --> 
         <attr name="cellSize" format="dimension" />
+        <!-- HotSeat的高度 -->
+        <attr name="w_hotseat_height" format="dimension" />
+        <!-- DeleteZone的高度 -->
+        <attr name="w_deletezone_height" format="dimension"  />
     </declare-styleable>
     
     <!-- 定义多屏指示的自定义属性 -->
@@ -29,7 +33,6 @@
         <attr name="foreground_color" format="reference|color" />
         <!-- 圆圈间的间隔 -->
         <attr name="space" format="dimension" />
-        
     </declare-styleable>
     
     <!-- 定义HotSeat的一些属性 -->
@@ -42,6 +45,26 @@
         <attr name="hotseat_space"  format="dimension" />
         <!-- HotSeat两边的间隔 -->
         <attr name="hotseat_edge_space" format="dimension" />
+        <!-- HotSeat的高度 -->
+        <attr name="hotseat_height" format="dimension" />
     </declare-styleable>
+    
+    <!-- 定义DeleteZone的一些属性 -->
+    <declare-styleable name="DeleteZone">
+        <!-- DeleteZone控件的高度 -->
+        <attr name="deletezone_height" format="dimension" />
+    </declare-styleable>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 </resources>

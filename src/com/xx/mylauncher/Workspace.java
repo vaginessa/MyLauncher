@@ -275,10 +275,8 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		}
 		
 		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
-		if (source == this) {
-			curCellLayout.onDragOver(source, x, y, xOffset, yOffset, dragView, dragInfo);
-		}
 		
+		curCellLayout.onDragOver(source, x, y, xOffset, yOffset, dragView, dragInfo);
 	}
 
 	@Override
@@ -288,20 +286,9 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		Utils.log(TAG, "onDragExit");
 	}
 	
-	/*
-	 * @param source	从哪里拖动过来的，拖动源
-	 * @param x				到父View的偏移量{@link DropTarget}，如workspace
-	 * @param y				到父View的偏移量{@link DropTarget}，如workspace
-	 * @param xOffset	到View本身的偏移量，即到长按下的View的偏移量
-	 * @param yOffset
-	 * @param dragView	拖动的View，绘制表现层在DragLayer中
-	 * @param dragInfo	拖动的View所携带的信息
-	 */
 	@Override	
 	public boolean acceptDrop(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		// TODO Auto-generated method stub
-//		Utils.log(TAG, "acceptDrop");
 		if (m_ListCellLayout.size() <= 0) {
 			return false;
 		}
@@ -310,12 +297,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		 * 根据所在的移动坐标值判断是否有足够大的空间去给放置
 		 * 
 		 */
-		if (source == this) {
-			return curCellLayout.acceptDrop(source, x, y, xOffset, yOffset, dragView, dragInfo);
-			
-		}
-		
-		return false;
+		return curCellLayout.acceptDrop(source, x, y, xOffset, yOffset, dragView, dragInfo);
 	}
 
 	

@@ -65,6 +65,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_Workspace.setDragLayer(m_DragLayer);
 //		m_Workspace.setOnLongClickListener(this);
 		m_HotSeat.setDragLayer(m_DragLayer);
+		m_HotSeat.setLauncher(this);
 		
 		
 		m_Workspace.post(new Runnable() {

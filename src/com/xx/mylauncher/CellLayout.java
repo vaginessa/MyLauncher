@@ -394,25 +394,53 @@ public class CellLayout extends ViewGroup {
     */
 	public void onDropCompleted(View dropTargetView, View dragView, Object itemInfo, int rawX, int rawY, int iOffX, int iOffy, boolean success) {
 		
-			/*
-			 * 使DragView平滑移动到原来的位置或新的位置，Item View设置可见，draglayer-invalid
-			 */
+		final boolean bIsDropSelf = dropTargetView instanceof Workspace;
+		
+		if (bIsDropSelf) {
+			onDropCompletedInSelf(dragView, itemInfo, success);
+			
+		} else if (dropTargetView instanceof HotSeat) {
+			if (!success) {
+				onDropCompletedInSelf(dragView, itemInfo, success);
+				
+			} else {
+				/*
+				 * 交给dropTargetView的onDrop中取处理滑动
+				 */
+			}
+		} else {
+			onDropCompletedInSelf(dragView, itemInfo, success);
+		}
+		
+	}
+
+	/**
+	 * 当拖放结束时，item view 是回到自身，即拖拽源和拖放目的地一样
+	 * @param dragView
+	 * @param itemInfo
+	 * @param success
+	 */
+	private void onDropCompletedInSelf(View dragView, Object itemInfo,
+			boolean success) {
+		/*
+		 * 使DragView平滑移动到原来的位置或新的位置，Item View设置可见，draglayer-invalid
+		 */
 		final DropObjectInfo info = new DropObjectInfo();
 		final CellInfo cellInfo = (CellInfo) itemInfo;
 		final DragObjectInfo dragInfo = m_DragObjectInfo;
-		final int[] iArrayTempOff = {0, 0};
-		
+		final int[] iArrayTempOff = { 0, 0 };
+
 		adjustToDragLayer(iArrayTempOff, dragView, getContext(), true);
 		info.finalX = iArrayTempOff[0];
 		info.finalY = iArrayTempOff[1];
-		
+
 		info.dragView = (DragView) dragView;
 		info.itemView = cellInfo.getView();
-		
+
 		adjustToDragLayer(iArrayTempOff, cellInfo.getView(), getContext(), true);
-		
+
 		if (!success) {
-			//移动回原来的位置
+			// 移动回原来的位置
 			info.originX = iArrayTempOff[0];
 			info.originY = iArrayTempOff[1];
 			info.cellX = cellInfo.getCellX();
@@ -421,9 +449,10 @@ public class CellLayout extends ViewGroup {
 			info.cellVSpan = cellInfo.getCellVSpan();
 			info.canDrop = false;
 		} else {
-			//移动到新的位置
+			// 移动到新的位置
 			info.canDrop = true;
-			info.originX = dragInfo.x;	//TODO relative to draglayer take a cause
+			info.originX = dragInfo.x; // TODO relative to draglayer take a
+										// cause
 			info.originY = dragInfo.y;
 			info.cellX = dragInfo.cellX;
 			info.cellY = dragInfo.cellY;
@@ -431,13 +460,13 @@ public class CellLayout extends ViewGroup {
 			info.cellVSpan = dragInfo.cellVSpan;
 		}
 		info.init();
-		
-		Utils.log(TAG, "offset draglayer-offLeft=%d, offTop=%d", iArrayTempOff[0], iArrayTempOff[1] );
+
+		Utils.log(TAG, "offset draglayer-offLeft=%d, offTop=%d",
+				iArrayTempOff[0], iArrayTempOff[1]);
 		Utils.log(TAG, info.toString());
-		
+
 		flagOcupied(info.cellX, info.cellY, info.cellHSpan, info.cellVSpan);
 		m_Launcher.getDragLayer().updateDragViewToOriPoint(info);
-		
 	}
 	
 	/** temp */
@@ -487,27 +516,71 @@ public class CellLayout extends ViewGroup {
 	public void onDrop(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
 		
-		if (dragInfo instanceof CellInfo) {
-			final CellInfo cellInfo = (CellInfo) dragInfo;
-			final View itemView = cellInfo.getView();
-			final CellLayout.LayoutParams lp = (LayoutParams) itemView.getLayoutParams();
-			if (m_DragObjectInfo != null) {
-				lp.cellX = m_DragObjectInfo.cellX;
-				lp.cellY = m_DragObjectInfo.cellY;
-				lp.cellHSpan = m_DragObjectInfo.cellHSpan;
-				lp.cellVSpan = m_DragObjectInfo.cellVSpan;
-//				itemView.setVisibility(View.VISIBLE);		//TODO 是否统一下，这类的操作都放到onDropComplete中去呢
-				
-				//设置占用的格子
-				for (int ti=lp.cellY; ti<=lp.cellY+lp.cellVSpan-1; ti++) {
-					for (int tj=lp.cellX; tj<=lp.cellX+lp.cellHSpan-1; tj++) {
-						m_bCellsOcupied[ti][tj] = true;
-					}
-				}
-				
-//				requestLayout();
+		final boolean bIsDragSourceSelf = source instanceof Workspace;
+		final CellInfo cellInfo = (CellInfo) dragInfo;
+		final View itemView = cellInfo.getView();
+		final CellLayout.LayoutParams lp = (LayoutParams) itemView.getLayoutParams();
+		final DragObjectInfo dragObjectInfo = m_DragObjectInfo;
+		
+		lp.cellX = m_DragObjectInfo.cellX;
+		lp.cellY = m_DragObjectInfo.cellY;
+		lp.cellHSpan = m_DragObjectInfo.cellHSpan;
+		lp.cellVSpan = m_DragObjectInfo.cellVSpan;
+		
+		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
+		
+		// 设置占用的格子
+		for (int ti = lp.cellY; ti <= lp.cellY + lp.cellVSpan - 1; ti++) {
+			for (int tj = lp.cellX; tj <= lp.cellX + lp.cellHSpan - 1; tj++) {
+				m_bCellsOcupied[ti][tj] = true;
 			}
 		}
+		// requestLayout();
+
+		if (bIsDragSourceSelf) {
+			/*
+			 * 叫给dragsource取处理滑动
+			 */
+			
+		} else if (source instanceof HotSeat) {
+			/*
+			 * 接手滑动
+			 */
+			final HotSeat hotSeat = (HotSeat) source;
+			final ShortCutView2 viewShortCut = (ShortCutView2) itemView;
+			hotSeat.removeView(viewShortCut);
+			viewShortCut.setLabelVisibility(View.VISIBLE);
+//			viewShortCut.setVisibility(View.INVISIBLE);
+			addView(viewShortCut);
+			requestLayout();
+			
+			final DropObjectInfo dropSliceInfo = new DropObjectInfo();
+			final int[] iArrayTemoOff = {0, 0};
+			
+			
+			dropSliceInfo.dragView = dragView;
+			dropSliceInfo.itemView = cellInfo.getView();
+			dropSliceInfo.cellX = cellInfo.getCellX();
+			dropSliceInfo.cellY = cellInfo.getCellY();
+			dropSliceInfo.cellHSpan = cellInfo.getCellHSpan();
+			dropSliceInfo.cellVSpan = cellInfo.getCellVSpan();
+			
+			adjustToDragLayer(iArrayTemoOff, dragView, getContext(), true);
+			dropSliceInfo.finalX = iArrayTemoOff[0];
+			dropSliceInfo.finalY = iArrayTemoOff[1];
+//			adjustToDragLayer(iArrayTemoOff, cellInfo.getView(), getContext(), true);
+//			dropSliceInfo.originX = iArrayTemoOff[0];
+//			dropSliceInfo.originY = iArrayTemoOff[1];
+			dropSliceInfo.originX = dragObjectInfo.x;
+			dropSliceInfo.originY = dragObjectInfo.y;
+			
+			dropSliceInfo.canDrop = true;
+			
+			dropSliceInfo.init();
+			
+			m_Launcher.getDragLayer().updateDragViewToOriPoint(dropSliceInfo);
+		}
+		
 	}
 	
 	public void onDragOver(DragSource source, int x, int y, int xOffset,
@@ -528,134 +601,137 @@ public class CellLayout extends ViewGroup {
      */
 	public boolean acceptDrop(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		
+
 		final int iCellWidth = m_iCellSize;
 		final int iHSpace = m_iSpaceHorizatation;
 		final int iVSpace = m_iSpaceVertical;
-		final int iHSpanCount = m_iCellHCount + (iHSpace / iCellWidth) + 1;	//考虑间隔比格子大的情况
+		final int iHSpanCount = m_iCellHCount + (iHSpace / iCellWidth) + 1; // 考虑间隔比格子大的情况
 		final int iVSpanCount = m_iCellVCount + (iVSpace / iCellWidth) + 1;
 		final int iHSpanNum = m_iCellHCount;
 		final int iVSpanNum = m_iCellVCount;
-		
+
 		final DragObjectInfo dragObjectInfo = m_DragObjectInfo;
 		m_DragObjectInfo.reset();
-		
-		//TODO
-		//注意DragView是拖动的View，不是原来的Item View，因为可能会改动DragView来满足效果
-		if (dragInfo instanceof CellInfo) {
-			CellInfo cellInfo = (CellInfo) dragInfo;
-			int iItemViewWidth = cellInfo.getCellHSpan() * iCellWidth + (cellInfo.getCellHSpan()-1) * iHSpace;
-			int iItemViewHeight = cellInfo.getCellVSpan() * iCellWidth + (cellInfo.getCellVSpan()-1) * iVSpace;
-			
-			if (! ((xOffset>=0 && xOffset<=iItemViewWidth) && (yOffset>=0 && yOffset<=iItemViewHeight) ) ) {
-				Utils.log(TAG, "超出边界.xOffset=%d, yOffset=%d, iItemViewWidth=%d, iItemViewHeight=%d", xOffset, yOffset, iItemViewWidth, iItemViewHeight );
-			}
-			
-			if ((xOffset>=0 && xOffset<=iItemViewWidth) && (yOffset>=0 && yOffset<=iItemViewHeight) ) {
-//				Utils.log(TAG, "满足边界条件");
-				/*
-				 * 相对于自身的格子级偏移量
-				 */
-				int cellHLocRefSelf = xOffset / iCellWidth;	//这里如果间隔比格子大，则计算错误	//TODO
-				int cellVLocRefSelf = yOffset / iCellWidth;
-				
-				/*
-				 * 相对于CellLayout的格子级偏移量
-				 * 这里和怎么放置子View的逻辑密切相关，如果设置padding/margin属性的话
-				 */
-				x += getPaddingLeft();
-				y += getPaddingTop();
-				
-				int cellHLocRefParent = 0;
-				int cellVLocRefParent = 0;
-				
-				int iTempDistance = 0;
-				
-				for (int i=0; i<iHSpanCount; i++ ) {
-					iTempDistance += iHSpace;
-					if (iTempDistance > x) {
-						//在间隔中
-						dragObjectInfo.isInvalid = false;
-						dragObjectInfo.isInCell = false;
-						return false;
-					}
-					
-					iTempDistance += iCellWidth;
-					if (iTempDistance >= x) {
-						//找到了
-						dragObjectInfo.isInvalid = true;
-						dragObjectInfo.isInCell = true;
-						dragObjectInfo.cellXPress = cellHLocRefParent;
-						break;
-					}
-					cellHLocRefParent++;
-				} //end for
-				
-				iTempDistance = 0;
-				
-				for (int i=0; i<iVSpanCount; i++) {
-					iTempDistance += iVSpace;
-					if (iTempDistance > y) {
-						//在间隔中
-						dragObjectInfo.isInvalid = false;
-						dragObjectInfo.isInCell = false;
-						return false;
-					}
-					
-					iTempDistance += iCellWidth;
-					if (iTempDistance >= y) {
-						//找到了
-						dragObjectInfo.isInvalid = true;
-						dragObjectInfo.isInCell = true;
-						dragObjectInfo.cellYPress = cellVLocRefParent;
-						break;
-					} 
-					
-					cellVLocRefParent++;
-				}	//end for
-				
-//				Utils.log(TAG, "开始映射");
-				
-				/*
-				 * 映射到CellLayout中去
-				 * 如果有不能完全映射的情况，则不绘制
-				 */
-				int iOffLeftArea = cellHLocRefParent - cellHLocRefSelf;
-				int iOffTopArea = cellVLocRefParent - cellVLocRefSelf;
-				int iHTemp1 = cellInfo.getCellHSpan() - 1 - cellHLocRefSelf;
-				int iVTemp1 = cellInfo.getCellVSpan() - 1- cellVLocRefSelf;
-				int iOffRightArea = cellHLocRefParent + iHTemp1;
-				int iOffBottomArea = cellVLocRefParent + iVTemp1;
-				
-				//超出边界
-				if (iOffLeftArea<0 || iOffTopArea<0 || iOffRightArea>=iHSpanNum || iOffBottomArea>=iVSpanNum ) {
-					Utils.log(TAG, "超出边界");
+
+		// TODO
+		// 注意DragView是拖动的View，不是原来的Item View，因为可能会改动DragView来满足效果
+		CellInfo cellInfo = (CellInfo) dragInfo;
+		int iItemViewWidth = cellInfo.getCellHSpan() * iCellWidth
+				+ (cellInfo.getCellHSpan() - 1) * iHSpace;
+		int iItemViewHeight = cellInfo.getCellVSpan() * iCellWidth
+				+ (cellInfo.getCellVSpan() - 1) * iVSpace;
+
+		if (!((xOffset >= 0 && xOffset <= iItemViewWidth) && (yOffset >= 0 && yOffset <= iItemViewHeight))) {
+			Utils.log(
+					TAG,
+					"超出边界.xOffset=%d, yOffset=%d, iItemViewWidth=%d, iItemViewHeight=%d",
+					xOffset, yOffset, iItemViewWidth, iItemViewHeight);
+		}
+
+		if ((xOffset >= 0 && xOffset <= iItemViewWidth)
+				&& (yOffset >= 0 && yOffset <= iItemViewHeight)) {
+			// Utils.log(TAG, "满足边界条件");
+			/*
+			 * 相对于自身的格子级偏移量
+			 */
+			int cellHLocRefSelf = xOffset / iCellWidth; // 这里如果间隔比格子大，则计算错误
+														// //TODO
+			int cellVLocRefSelf = yOffset / iCellWidth;
+
+			/*
+			 * 相对于CellLayout的格子级偏移量 这里和怎么放置子View的逻辑密切相关，如果设置padding/margin属性的话
+			 */
+			x += getPaddingLeft();
+			y += getPaddingTop();
+
+			int cellHLocRefParent = 0;
+			int cellVLocRefParent = 0;
+
+			int iTempDistance = 0;
+
+			for (int i = 0; i < iHSpanCount; i++) {
+				iTempDistance += iHSpace;
+				if (iTempDistance > x) {
+					// 在间隔中
 					dragObjectInfo.isInvalid = false;
+					dragObjectInfo.isInCell = false;
 					return false;
 				}
-				
-				dragObjectInfo.itemView = cellInfo.getView();
-				dragObjectInfo.dragView = dragView;
-				
-				//可以完全映射
-				dragObjectInfo.cellX = iOffLeftArea;
-				dragObjectInfo.cellY = iOffTopArea;
-				dragObjectInfo.cellHSpan = cellInfo.getCellHSpan();
-				dragObjectInfo.cellVSpan = cellInfo.getCellVSpan();
-				
-				boolean r1 = flagCellsOcupied(dragObjectInfo);
-				
-				adjustCoors(dragObjectInfo, cellInfo);
-				
-//				invalidate();	//postInvalidate();
-				m_Launcher.getDragLayer().updateDragPreEffect(dragObjectInfo);
-				
-				return r1;
-			}	//有效的坐标区域，end if 
-			
-		}
-		
-		
+
+				iTempDistance += iCellWidth;
+				if (iTempDistance >= x) {
+					// 找到了
+					dragObjectInfo.isInvalid = true;
+					dragObjectInfo.isInCell = true;
+					dragObjectInfo.cellXPress = cellHLocRefParent;
+					break;
+				}
+				cellHLocRefParent++;
+			} // end for
+
+			iTempDistance = 0;
+
+			for (int i = 0; i < iVSpanCount; i++) {
+				iTempDistance += iVSpace;
+				if (iTempDistance > y) {
+					// 在间隔中
+					dragObjectInfo.isInvalid = false;
+					dragObjectInfo.isInCell = false;
+					return false;
+				}
+
+				iTempDistance += iCellWidth;
+				if (iTempDistance >= y) {
+					// 找到了
+					dragObjectInfo.isInvalid = true;
+					dragObjectInfo.isInCell = true;
+					dragObjectInfo.cellYPress = cellVLocRefParent;
+					break;
+				}
+
+				cellVLocRefParent++;
+			} // end for
+
+			// Utils.log(TAG, "开始映射");
+
+			/*
+			 * 映射到CellLayout中去 如果有不能完全映射的情况，则不绘制
+			 */
+			int iOffLeftArea = cellHLocRefParent - cellHLocRefSelf;
+			int iOffTopArea = cellVLocRefParent - cellVLocRefSelf;
+			int iHTemp1 = cellInfo.getCellHSpan() - 1 - cellHLocRefSelf;
+			int iVTemp1 = cellInfo.getCellVSpan() - 1 - cellVLocRefSelf;
+			int iOffRightArea = cellHLocRefParent + iHTemp1;
+			int iOffBottomArea = cellVLocRefParent + iVTemp1;
+
+			// 超出边界
+			if (iOffLeftArea < 0 || iOffTopArea < 0
+					|| iOffRightArea >= iHSpanNum
+					|| iOffBottomArea >= iVSpanNum) {
+				Utils.log(TAG, "超出边界");
+				dragObjectInfo.isInvalid = false;
+				return false;
+			}
+
+			dragObjectInfo.itemView = cellInfo.getView();
+			dragObjectInfo.dragView = dragView;
+
+			// 可以完全映射
+			dragObjectInfo.cellX = iOffLeftArea;
+			dragObjectInfo.cellY = iOffTopArea;
+			dragObjectInfo.cellHSpan = cellInfo.getCellHSpan();
+			dragObjectInfo.cellVSpan = cellInfo.getCellVSpan();
+
+			boolean r1 = flagCellsOcupied(dragObjectInfo);
+
+			adjustCoors(dragObjectInfo, cellInfo);
+
+			// invalidate(); //postInvalidate();
+			m_Launcher.getDragLayer().updateDragPreEffect(dragObjectInfo);
+
+			return r1;
+		} // 有效的坐标区域，end if
+
 		return false;
 	}
 	

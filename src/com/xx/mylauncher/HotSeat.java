@@ -15,6 +15,7 @@ import android.view.ViewParent;
 import android.view.WindowManager;
 
 import com.xx.mylauncher.CellLayout.DragObjectInfo;
+import com.xx.mylauncher.CellLayout.DropObjectInfo;
 
 /**
  * HotSeat，屏幕中固定的部分
@@ -83,6 +84,11 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 	
 	/** 拖拽层 */
 	private DragLayer m_DragLayer;
+	
+	private MainActivity m_Launcher;
+	
+	private int[] m_iArrayTempCoor = new int[2];
+	
 	
 	public HotSeat(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -343,7 +349,7 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 	 * @param cellInfo
 	 */
 	public void clearFlagOcupid(CellInfo cellInfo) {
-		//TODO
+		m_bOccupied[cellInfo.getHotSeatCellX()] = false;
 	}
 
 	@Override
@@ -352,6 +358,10 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 		
 	}
 
+	public void setLauncher(MainActivity launcher) {
+		this.m_Launcher = launcher;
+	}
+	
 	@Override
 	public void setDragLayer(DragLayer dragLayer) {
 		this.m_DragLayer = dragLayer;
@@ -366,38 +376,174 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 	public void onDropCompleted(View dropTargetView, View dragView,
 			Object itemInfo, int rawX, int rawY, int iOffX, int iOffy,
 			boolean success) {
-		// TODO Auto-generated method stub
 		
+		final boolean bIsDropInSelf = dropTargetView instanceof HotSeat;
+		
+		if (bIsDropInSelf) {
+			onDropCompletedInSelf(dragView, itemInfo, success);
+			
+		} else if (dropTargetView instanceof Workspace) {
+			if (!success) {
+				onDropCompletedInSelf(dragView, itemInfo, success);
+				
+			} else {
+				/*
+				 * 交给dropTargetView的onDrop中处理滑动
+				 */
+			}
+			
+		} else {
+			onDropCompletedInSelf(dragView, itemInfo, success);
+		}
+		
+		
+	}
+	/**
+	 * 
+	 * @param dragView
+	 * @param itemInfo
+	 * @param success
+	 */
+	private void onDropCompletedInSelf(View dragView, Object itemInfo, boolean success) {
+		/*
+		 * 使DragView滑回原来的位置或新的位置
+		 */
+		final DropObjectInfo info = new DropObjectInfo();
+		final CellInfo cellInfo = (CellInfo) itemInfo;
+		final DragObjectInfo dragInfo = m_CurDragObjectInfo;
+		final int[] iArrayTempOff = {0, 0};
+		final boolean[] bArrayOccupid = m_bOccupied;
+		
+		adjustToDragLayer(iArrayTempOff, dragView, getContext(), true);
+		info.finalX = iArrayTempOff[0];
+		info.finalY = iArrayTempOff[1];
+		info.dragView = (DragView) dragView;
+		info.itemView = cellInfo.getView();
+		
+		if (!success) {
+			adjustToDragLayer(iArrayTempOff, cellInfo.getView(), getContext(), true);
+			info.originX = iArrayTempOff[0];
+			info.originY = iArrayTempOff[1];
+			info.canDrop = false;
+			
+		} else {
+			info.originX = dragInfo.x;
+			info.originY = dragInfo.y;
+			info.canDrop = true;
+			
+		}
+		
+		bArrayOccupid[cellInfo.getHotSeatCellX()] = true;
+		info.init();
+		
+		m_DragLayer.updateDragViewToOriPoint(info);
 	}
 
 	@Override
 	public void onDrop(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		// TODO Auto-generated method stub
 		Utils.log(TAG, "onDrop");
+		
+		final DragObjectInfo dragObjectInfo = m_CurDragObjectInfo;
+		final boolean bIsFromSelf = source instanceof HotSeat; 
 		final boolean[] bArrayOccupied = m_bOccupied;
 		final CellInfo cellInfo = (CellInfo) dragInfo;
 		final int iHotSeatCellY = 0;
 		final int iHotSeatCellX = getCellXAccordingCoordinateRefParent(x, y);
 		
-		if (iHotSeatCellX != -1) {
-			final ShortCutView2 itemView = (ShortCutView2) cellInfo.getView();
-
-			itemView.setLabelVisibility(View.GONE);
-			cellInfo.setHotSeatCellX(iHotSeatCellX);
-			cellInfo.setHotSeatCellY(iHotSeatCellY);
-			cellInfo.setLocation(CellInfo.CellLocation.HOTSEAT);
-			bArrayOccupied[iHotSeatCellX] = true;
-			
-			if (source instanceof Workspace) {
-				final Workspace workspace = (Workspace) source;
-				workspace.getCurCellLayout().removeView(itemView);
-				addView(itemView);
-			}
-			
-			requestLayout();
+		if (iHotSeatCellX == -1) {
+			Utils.log(TAG, "这里是出错的，不过应该不会有这种情况发生");	//应该throw Exception
+			throw new IllegalStateException("状态异常，当onDrop时表明可以接受，但是这时再计算时却出错.");
 		}
 		
+		bArrayOccupied[iHotSeatCellX] = true;
+		cellInfo.setHotSeatCellX(iHotSeatCellX);
+		cellInfo.setHotSeatCellY(iHotSeatCellY);
+		cellInfo.setLocation(CellInfo.CellLocation.HOTSEAT);
+		
+		if (bIsFromSelf) {
+			/*
+			 * 交给dragsource去接手滑动
+			 */
+			
+		} else if (source instanceof Workspace) {
+			/*
+			 * 更改属性，原source remove child view，dropTaget add child view
+			 * 处理occupied，接手滑动
+			 */
+			final ShortCutView2 itemView = (ShortCutView2) cellInfo.getView();
+			final Workspace workspace= (Workspace) source;
+			workspace.getCurCellLayout().removeView(itemView);
+			itemView.setLabelVisibility(View.GONE);
+//			itemView.setVisibility(View.INVISIBLE);
+			addView(itemView);
+			requestLayout();
+			
+			final DropObjectInfo dropSliceInfo = new DropObjectInfo();
+			final int[] iArrayTemoOff = {0,0};
+			
+			dropSliceInfo.dragView = dragView;
+			dropSliceInfo.itemView = cellInfo.getView();
+			adjustToDragLayer(iArrayTemoOff, dragView, getContext(), true);
+			dropSliceInfo.finalX = iArrayTemoOff[0];
+			dropSliceInfo.finalY = iArrayTemoOff[1];
+			
+			/*
+			 * 不这样写的原因是requestLayout不是立即同步执行的
+			 * 这里有知识点不了解
+			 */
+//			adjustToDragLayer(iArrayTemoOff, cellInfo.getView(), getContext(), true);
+//			dropSliceInfo.originX = iArrayTemoOff[0];
+//			dropSliceInfo.originY = iArrayTemoOff[1];
+			dropSliceInfo.originX = dragObjectInfo.x;
+			dropSliceInfo.originY = dragObjectInfo.y;
+			dropSliceInfo.canDrop = true;
+			
+			dropSliceInfo.init();
+			
+			
+			Utils.log(TAG, dropSliceInfo.toString());
+			m_DragLayer.updateDragViewToOriPoint(dropSliceInfo);
+		}
+		
+	}
+	
+	/**
+	 * 返回View的相对于DragLayer的坐标值
+	 * @param coordnates coordnates[0]=left, coordnates[1]=top，返回值
+	 * @param view
+	 * @param context
+	 * @param subStatus	是否减去状态栏的高度，一般设为true，减去其高度
+	 */
+	private void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
+		if (view == null) {
+			return;
+		}
+		
+		if (coordnates == null) {
+			throw new NullPointerException();
+		}
+		
+		final DragLayer dragLayer = m_Launcher.getDragLayer();
+		
+		int iOffLeft = 0;
+		int iOffTop = 0;
+		coordnates[0] = 0;
+		coordnates[1] = 0;
+		
+		final int[] iArrayTempCoor = m_iArrayTempCoor; 
+		view.getLocationOnScreen(iArrayTempCoor);
+		
+		iOffLeft = iArrayTempCoor[0] - dragLayer.getLeft();
+		iOffTop = iArrayTempCoor[1] - dragLayer.getTop();
+		
+		coordnates[0] += iOffLeft;
+		coordnates[1] += iOffTop;
+		
+		if (subStatus) {
+			int iStatusHeight = Utils.getStatusHeight(context);
+			coordnates[1] -= iStatusHeight;
+		}
 	}
 
 	@Override
@@ -418,18 +564,6 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 
 	private DragObjectInfo m_CurDragObjectInfo = new DragObjectInfo();
 	
-	/*
-	 * @param source	从哪里拖动过来的，拖动源
-	 * @param x	到父View的偏移量{@link DropTarget}，如workspace
-	 * @param y	到父View的偏移量{@link DropTarget}，如workspace
-	 * @param xOffset	到View本身的偏移量，即到长按下的View的偏移量
-	 * @param yOffset
-	 * @param dragView	拖动的View，绘制表现层在DragLayer中
-	 * @param dragInfo	拖动的View所携带的信息
-     * @return
-	 * (non-Javadoc)
-	 * @see com.xx.mylauncher.DropTarget#onDragOver(com.xx.mylauncher.DragSource, int, int, int, int, com.xx.mylauncher.DragView, java.lang.Object)
-	 */
 	@Override
 	public void onDragOver(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {

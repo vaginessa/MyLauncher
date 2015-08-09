@@ -45,6 +45,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	/** 多屏滑动指示器 */
 	private SlideIndicator m_SlideIndicator;
 	
+	private DeleteZone m_DeleteZone;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -55,18 +57,20 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_HotSeat = (HotSeat) findViewById(R.id.hotseat);
 //		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
 		m_SlideIndicator = (SlideIndicator) findViewById(R.id.slideIndicator);
+		m_DeleteZone = (DeleteZone) findViewById(R.id.deletezone);
 		m_DragController = new DragController(this, this );
 		
 		m_DragLayer.setDragController(m_DragController);
 		m_DragController.registerDropTarget(m_Workspace);	//别忘记注册添加
 		m_DragController.registerDropTarget(m_HotSeat);
+		m_DragController.registerDropTarget(m_DeleteZone);
+		m_DragController.registerDragListener(m_DeleteZone);
 //		m_CellLayout.setLauncher(this);	//TODO 先这样添加
 		m_Workspace.setDragController(m_DragController);
 		m_Workspace.setDragLayer(m_DragLayer);
 //		m_Workspace.setOnLongClickListener(this);
 		m_HotSeat.setDragLayer(m_DragLayer);
 		m_HotSeat.setLauncher(this);
-		
 		
 		m_Workspace.post(new Runnable() {
 			

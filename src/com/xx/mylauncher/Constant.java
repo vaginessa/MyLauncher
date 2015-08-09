@@ -15,5 +15,4 @@ public class Constant {
 	public static final int DIMEN_DEFAULT_DELETEZONE_HEIGHT = 35;	//DP
 	
 	
-	
 }

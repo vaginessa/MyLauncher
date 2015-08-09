@@ -243,6 +243,15 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 	public CellLayout getCurCellLayout() {
 		return m_ListCellLayout.get(m_iCurScreen);
 	}
+	
+	/**
+	 * 返回指定的屏幕
+	 * @param whichCellLayout
+	 * @return
+	 */
+	public CellLayout getSpecifyCellLayout(int whichCellLayout) {
+		return m_ListCellLayout.get(whichCellLayout);
+	}
 
 	@Override
 	public void setDragController(DragController dragger) {

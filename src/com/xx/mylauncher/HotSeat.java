@@ -390,6 +390,18 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 				 */
 			}
 			
+		} else if (dropTargetView instanceof DeleteZone) {
+			if (success) {
+				final CellInfo cellInfo = (CellInfo) itemInfo;
+				
+				m_DragLayer.removeView(dragView);
+				removeView(cellInfo.getView() );
+				
+			} else {
+				onDropCompletedInSelf(dragView, itemInfo, success);
+				
+			}
+			
 		} else {
 			onDropCompletedInSelf(dragView, itemInfo, success);
 		}

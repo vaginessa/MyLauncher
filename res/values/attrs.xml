@@ -53,6 +53,8 @@
     <declare-styleable name="DeleteZone">
         <!-- DeleteZone控件的高度 -->
         <attr name="deletezone_height" format="dimension" />
+        <!-- 背景图片 -->
+        <attr name="trashcan" format="reference" />
     </declare-styleable>
     
     

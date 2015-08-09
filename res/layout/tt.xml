@@ -8,9 +8,11 @@
     android:background="#90000000" >
     
     <com.xx.mylauncher.DeleteZone
+        android:id="@+id/deletezone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/holo_purple"/>
+        android:background="@android:color/holo_purple"
+        launcher:trashcan="@drawable/trashcan" />
     
     <FrameLayout 
         android:layout_width="match_parent"

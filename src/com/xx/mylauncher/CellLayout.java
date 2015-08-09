@@ -411,6 +411,22 @@ public class CellLayout extends ViewGroup {
 				 * 交给dropTargetView的onDrop中取处理滑动
 				 */
 			}
+		} else if (dropTargetView instanceof DeleteZone) {
+			/*
+			 * delete view
+			 */
+			if (success) {
+				final CellInfo cellInfo = (CellInfo) itemInfo;
+				final int whichCellLayout = cellInfo.getScreen();
+				final CellLayout cellLayout = m_Launcher.getWorkspace().getSpecifyCellLayout(whichCellLayout);
+				
+				m_Launcher.getDragLayer().removeView(dragView);
+				cellLayout.removeView(cellInfo.getView());
+				
+			} else {
+				onDropCompletedInSelf(dragView, itemInfo, success);
+				
+			}
 		} else {
 			onDropCompletedInSelf(dragView, itemInfo, success);
 		}

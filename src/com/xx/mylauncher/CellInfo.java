@@ -143,7 +143,7 @@ public class CellInfo {
 	}
 	
 	/**
-	 * 返回所处的是第几个屏幕
+	 * 返回所处的是第几个屏幕的
 	 * @return
 	 */
 	public int getScreen() {

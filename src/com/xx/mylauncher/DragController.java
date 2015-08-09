@@ -336,13 +336,15 @@ public class DragController {
 			//改用了不出错的方法 - 2015/8/8
 			//计算DragLayer的top_left 的偏移量?? 好像不会，通过画图分析
 			//一般，Launcher中的DragLayer和Workspace是match_parent，即是最左上角的
-			
 			/*
 			 * getHitRect方法是得到该View在父布局{DrapLayer}中的对角坐标，前提是该View是DrapLayer的直接child view
 			 * 如果有titlebar则 (0, 0)是从titlebar下面开始记起的
 			 */
-//			dropTarget.getHitRect(r);
-			dropTarget.getHitRectRefDragLayer(r, dropTarget);
+			dropTarget.getHitRect(r);
+			/*
+			 * 下面这个是一步到位了？？越写，有些乱了
+			 */
+//			dropTarget.getHitRectRefDragLayer(r, dropTarget);
 			
 			/*
 			 * getLocationOnScreen方法是得到该View在屏幕中的绝对坐标，包括状态栏的高度

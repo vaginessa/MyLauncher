@@ -46,6 +46,8 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 	
 	private boolean m_bIsHintTrashcan;
 	
+	private Rect m_RectView = new Rect();
+	
 	public DeleteZone(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
@@ -84,8 +86,7 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 		}); 
 		
 		m_PaintHint = new Paint();
-		m_PaintHint.setColor(Color.RED);
-//		m_PaintHint.setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.DARKEN));  
+		m_PaintHint.setColorFilter(new PorterDuffColorFilter(Color.parseColor("#8fff0000"), PorterDuff.Mode.ADD));  
 //		m_PaintHint.setColorFilter(new ColorMatrixColorFilter(colorMatrix));
 		
 //		test();
@@ -137,11 +138,14 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		setMeasuredDimension(m_iViewWidth, m_iViewHeight);
+		
+		m_RectView.set(0, 0, m_iViewWidth, m_iViewHeight);
 	}
 	
+	
 	@Override
-	protected void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
+	protected void dispatchDraw(Canvas canvas) {
+		super.dispatchDraw(canvas);
 		/*
 		 * 
 		 */
@@ -151,14 +155,13 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 		m_RectTemp.set(iLeft, iTop, iLeft+m_BitmapBg.getWidth(), iTop+m_BitmapBg.getHeight() );
 		
 		if (m_bIsAnimShow) {
-			if (!m_bIsHintTrashcan) {
-				canvas.drawBitmap(m_BitmapBg, iLeft, m_iCurTrashcanHeight, null);	
-			} else {
+			canvas.drawBitmap(m_BitmapBg, iLeft, m_iCurTrashcanHeight, null);
+			if (m_bIsHintTrashcan) {
+				canvas.drawRect(m_RectView, m_PaintHint);
 				canvas.drawBitmap(m_BitmapBg, iLeft, m_iCurTrashcanHeight, m_PaintHint);
 			}
-		
 		}
-		
+
 	}
 	
 	/*
@@ -255,13 +258,6 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 		
 	}
 
-	@Override
-	public void onDragEnter(DragSource source, int x, int y, int xOffset,
-			int yOffset, DragView dragView, Object dragInfo) {
-		Utils.log(TAG, "onDragEnter");
-		m_bIsHintTrashcan = false;
-		
-	}
     /**
      * 拖动进入{@link DropTarget} 时回调
 	 * @param source	从哪里拖动过来的，拖动源
@@ -276,36 +272,39 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 	@Override
 	public void onDragOver(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		boolean bIsHint = isHintTrashcan(x, y);
-		invalidate();
 	}
 	
-	public boolean isHintTrashcan(int xOffsetParent, int yOffsetParent) {
+	private boolean isHintTrashcan(int xOffsetParent, int yOffsetParent) {
 		boolean bIsHint = m_RectTemp.contains(xOffsetParent, yOffsetParent);
 
 		m_bIsHintTrashcan = bIsHint;
 		return bIsHint;
 	}
+
 	
+	@Override
+	public void onDragEnter(DragSource source, int x, int y, int xOffset,
+			int yOffset, DragView dragView, Object dragInfo) {
+		Utils.log(TAG, "onDragEnter");
+		m_bIsHintTrashcan = true;
+		invalidate();
+		dragView.onDragInDeleteZone();
+	}
 
 	@Override
 	public void onDragExit(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
 		Utils.log(TAG, "onDragExit");
-		m_bIsAnimShow = false;
 		m_bIsHintTrashcan = false;
-		
+		invalidate();
+		dragView.onDragOutDeleteZone();
 	}
 
 	@Override
 	public boolean acceptDrop(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
 		
-		boolean r =  isHintTrashcan(x, y);
-		
-		Utils.toastAndlogcat(getContext(), TAG, "%s", r ? "可以删除" : "不可以删除");
-		
-		return r;
+		return true;
 	}
 
 	@Override
@@ -349,6 +348,7 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 
 	@Override
 	public void onDragEnd() {
+		m_bIsHintTrashcan = false;
 		dismissTrashcan();
 	}
 	

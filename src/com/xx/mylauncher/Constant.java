@@ -12,7 +12,7 @@ public class Constant {
 	public static final int DIMEN_DEFAULT_HOTSEAT_HEIGHT = 70; //DP
 	
 	/** DeleteZone的高度 */
-	public static final int DIMEN_DEFAULT_DELETEZONE_HEIGHT = 35;	//DP
+	public static final int DIMEN_DEFAULT_DELETEZONE_HEIGHT = 40;	//DP
 	
 	
 }

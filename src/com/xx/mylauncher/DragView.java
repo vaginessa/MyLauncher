@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.view.View;
 
 /**
@@ -37,6 +39,12 @@ public class DragView extends View {
 	
 	private Bitmap m_ViewBitmap;
 	
+	/** 删除的Bitmap效果 */
+	private Bitmap m_DeleteBitmap;
+	private Paint m_PaintDelete;
+	
+	private boolean m_BInDeleteZone = false;
+	
 	/** 状态栏高度 */
 	private int m_iStatusHeight;
 	
@@ -65,13 +73,25 @@ public class DragView extends View {
 		m_Paint.setColor(Color.YELLOW);
 		m_Paint.setAlpha(140);
 		m_Paint.setStyle(Paint.Style.FILL);
+		
+		m_PaintDelete = new Paint();
+		m_PaintDelete.setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.DARKEN));
 	}
 
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		// TODO Auto-generated method stub
 		//先这样
-		setMeasuredDimension(m_iViewWidth, m_iViewHeight);
+		if (m_BInDeleteZone) {
+			if (m_DeleteBitmap != null) {
+				setMeasuredDimension(m_DeleteBitmap.getWidth(), m_DeleteBitmap.getHeight());	
+			} else {
+				setMeasuredDimension(m_iViewWidth, m_iViewHeight);	
+			}
+		} else {
+			setMeasuredDimension(m_iViewWidth, m_iViewHeight);	
+		}
+		
 	}
 	
 	@Override
@@ -79,7 +99,12 @@ public class DragView extends View {
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
 		//画呀画
-		canvas.drawBitmap(m_ViewBitmap, 0, 0, m_Paint);
+		if (!m_BInDeleteZone) {
+			canvas.drawBitmap(m_ViewBitmap, 0, 0, m_Paint);	
+		} else {
+			canvas.drawBitmap(m_DeleteBitmap, 0, 0, m_PaintDelete);
+		}
+		
 	}
 	
 	public void show(int rawX, int rawY) {
@@ -118,11 +143,37 @@ public class DragView extends View {
 		return Utils.getViewBitmap(this);
 	}
 	
+	public void onDragInDeleteZone() {
+		final Bitmap dragViewBitmap = getViewBitmap();
+		final int iBitmapWidth = dragViewBitmap.getWidth();
+		final int iBitmapHeight = dragViewBitmap.getHeight();
+		final float iWidthScale = 1.5f;
+		final float iHeightScale = 1.5f;
+		m_DeleteBitmap = Bitmap.createScaledBitmap(getViewBitmap(), (int)(iBitmapWidth*iWidthScale), (int)(iBitmapHeight*iHeightScale), true);
+		
+		m_BInDeleteZone = true;
+		requestLayout();
+		invalidate();
+	}
+	
+	public void onDragOutDeleteZone() {
+		m_BInDeleteZone = false;
+		requestLayout();
+		invalidate();
+	}
+	
+	
 	public void clearResource() {
 		if (m_ViewBitmap != null) {
 			m_ViewBitmap.recycle();
 			m_ViewBitmap = null;
 		}
+		
+		if (m_DeleteBitmap != null) {
+			m_DeleteBitmap.recycle();
+			m_DeleteBitmap = null;
+		}
+		
 	}
 	
 	@Override

@@ -406,7 +406,10 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 			onDropCompletedInSelf(dragView, itemInfo, success);
 		}
 		
-		
+		if (success) {
+			final CellInfo cellInfo = (CellInfo) itemInfo;
+			m_Launcher.getLauncherDBManager().updateDragInfo(cellInfo);
+		}
 	}
 	/**
 	 * 

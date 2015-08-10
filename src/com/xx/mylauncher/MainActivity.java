@@ -3,6 +3,8 @@ package com.xx.mylauncher;
 import java.util.List;
 import java.util.Random;
 
+import com.xx.mylauncher.dao.CellInfoEntity;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -32,8 +34,6 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 
 	private Workspace m_Workspace;
 	
-//	private CellLayout m_CellLayout;
-	
 	private DragController m_DragController;
 	
 	private HotSeat m_HotSeat;
@@ -47,6 +47,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	
 	private DeleteZone m_DeleteZone;
 	
+	private LauncherDBManager m_LauncherDBManager;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -55,7 +57,6 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_DragLayer = (DragLayer) findViewById(R.id.dragLayout);
 		m_Workspace = (Workspace) findViewById(R.id.workspace);
 		m_HotSeat = (HotSeat) findViewById(R.id.hotseat);
-//		m_CellLayout = (CellLayout) findViewById(R.id.celllayout);
 		m_SlideIndicator = (SlideIndicator) findViewById(R.id.slideIndicator);
 		m_DeleteZone = (DeleteZone) findViewById(R.id.deletezone);
 		m_DragController = new DragController(this, this );
@@ -71,6 +72,9 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 //		m_Workspace.setOnLongClickListener(this);
 		m_HotSeat.setDragLayer(m_DragLayer);
 		m_HotSeat.setLauncher(this);
+		m_DeleteZone.setLauncher(this);
+		
+		m_LauncherDBManager = LauncherDBManager.getInstance(this);
 		
 		m_Workspace.post(new Runnable() {
 			
@@ -132,7 +136,6 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 			Toast.makeText(MainActivity.this, getResources().getString(R.string.launcher_no_much_space), Toast.LENGTH_SHORT).show();
 		}
 		
-		
 	}
 	
 	/**
@@ -171,13 +174,20 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setOnClickListener(this);
 //		m_CellLayout.addView(view);
 		curCellLayout.addView(view);
+		m_LauncherDBManager.addShortCut(cellInfo, appInfo);
 	}
+	
+	
+	private void addViewInCellLayout(final CellInfo cellInfo, final View view) {
+		
+	}
+	
 	
 	/**
 	 * 添加Widget到Launcher中
 	 * @param widgetView
 	 */
-	private void addWidgetInCellLayout(final View widgetView, final AppWidgetProviderInfo info, int cellX, int cellY, int cellHSpan, int cellVSpan) {
+	private void addWidgetInCellLayout(final View widgetView, final AppWidgetProviderInfo info, int cellX, int cellY, int cellHSpan, int cellVSpan, final int widgetId) {
 		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
 		final int iCurScreen = m_Workspace.getCurScreenIndicator();
 		
@@ -192,6 +202,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		cellInfo.setType(CellInfo.CellType.WIDGET);
 		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setView(widgetView);
+		cellInfo.setWidgetId(widgetId);
 		widgetView.setTag(cellInfo);
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
 		lp.cellX = cellX;
@@ -202,12 +213,18 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 //		widgetView.setFocusable(true);
 		widgetView.setOnLongClickListener(this);
 		
-//		m_CellLayout.addView(widgetView);
 		curCellLayout.addView(widgetView);
+		m_LauncherDBManager.addWidget(cellInfo);
+		
 	}
 	
-	
-	void addViewInScreen(final View widgetView, final AppWidgetProviderInfo info) {
+	/**
+	 * 添加Widget
+	 * @param widgetView
+	 * @param info
+	 * @param appWidgetId
+	 */
+	void addViewInScreen(final View widgetView, final AppWidgetProviderInfo info, final int appWidgetId) {
 		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
 		
 		final int iCellSize = curCellLayout.getCellSize();
@@ -228,53 +245,19 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		int iHSpan = (int) Math.ceil( (iWidth+iOffSize) / iUnitSize);	
 		int iVSpan = (int ) Math.ceil( (iHeight+iOffSize) / iUnitSize);
 		
-		
 		List<int[]> result = curCellLayout.isAcceptAddChild(iHSpan, iVSpan);
 		
 		if (result.size() > 0) {
 			int[] item = result.get(new Random().nextInt(result.size()) );
-			addWidgetInCellLayout(widgetView, info, item[0], item[1], iHSpan, iVSpan);
+			addWidgetInCellLayout(widgetView, info, item[0], item[1], iHSpan, iVSpan, appWidgetId);
 		} else {
+			m_WidgetManager.deleteAppWidgetId(appWidgetId);
 			Toast.makeText(MainActivity.this, getResources().getString(R.string.launcher_no_much_space), Toast.LENGTH_SHORT).show();
 		}
 		
 		Utils.log(TAG, "添加的Widget: iHSpan=%d, iVSpan=%d", iHSpan, iVSpan);
 	}
 	
-	
-	
-	
-	
-	private void addViewInCellLayout(int cellX, int cellY, int cellHSpan, int cellVSpan) {
-		final CellLayout curCellLayout = m_Workspace.getCurCellLayout();
-		final int iCurScreen = m_Workspace.getCurScreenIndicator();
-		
-		View v = new View(this);
-		CellInfo cellInfo = new CellInfo();
-		cellInfo.setScreen(iCurScreen);
-		cellInfo.setCellHSpan(cellHSpan);
-		cellInfo.setCellVSpan(cellVSpan);
-		cellInfo.setCellX(cellX);
-		cellInfo.setCellY(cellY);
-		cellInfo.setIconName("icon name");
-		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
-		cellInfo.setIntent(new Intent());
-		CellInfo.CellType type = cellHSpan > 1 || cellVSpan>1 ? CellInfo.CellType.WIDGET : CellInfo.CellType.SHORT_CUT;
-		cellInfo.setType(type);
-		cellInfo.setView(v);
-		v.setTag(cellInfo);	//设置cellInfo
-		v.setBackgroundColor(Color.RED);
-		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
-		lp.cellX = cellX;
-		lp.cellY = cellY;
-		lp.cellHSpan = cellHSpan;
-		lp.cellVSpan = cellVSpan;
-		v.setLayoutParams(lp);
-		v.setFocusable(true);
-		v.setOnLongClickListener(this);
-		
-		curCellLayout.addView(v);
-	}
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -422,7 +405,13 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		return m_HotSeat;
 	}
 	
+	public LauncherDBManager getLauncherDBManager() {
+		return m_LauncherDBManager;
+	}
 	
+	public WidgetManager getWidgetManager() {
+		return m_WidgetManager;
+	}
 	
 	/**
 	 * 获取显示所有程序的自定义对话框
@@ -520,7 +509,52 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 	}
 
-	
+	/**
+	 * 加载所有的item view
+	 */
+	private void loadAndAdapterItemViews() {
+		final List<CellInfoEntity> list = m_LauncherDBManager.loadAllItemViews();
+		List<CellInfo> resultList = null;
+		if (list != null) {
+			//dto
+			resultList = Utils.convertDbinfosToCellInfo(list);
+		}
+		
+		if (resultList != null ) {
+			//adapter
+			for (CellInfo cellInfo : resultList) {
+				final CellInfo.CellLocation location = cellInfo.getLocation();
+				final CellInfo.CellType type = cellInfo.getType();
+				// 根据包名获取icon
+				final ShortCutView2 itemView = new ShortCutView2(this);
+				
+				if (location == CellInfo.CellLocation.WORKSPACE) {
+					if (type == CellInfo.CellType.SHORT_CUT) {
+						
+						
+					} else if (type == CellInfo.CellType.WIDGET) {
+						
+						
+					}
+					
+					
+				} else if (location == CellInfo.CellLocation.HOTSEAT) {
+					if (type == CellInfo.CellType.SHORT_CUT) {
+						
+						
+					} else if (type == CellInfo.CellType.WIDGET) {
+						Utils.logE(TAG, "不应该出现这种情况");
+					}
+					
+				}
+				
+			}	//end for
+			
+			
+		}	//end not null
+		
+		
+	}	//end func
 	
 	
 }

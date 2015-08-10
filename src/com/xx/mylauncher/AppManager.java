@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 
 /**
  * 应用程序信息相关业务类
@@ -137,6 +138,29 @@ public class AppManager {
 		}
 		
 		return clsName;
+	}
+	
+	/**
+	 * 根据包名返回icon图标
+	 * @param pkgName
+	 * @param pm
+	 * @return
+	 */
+	public Drawable getIcon(final String pkgName, final PackageManager pm) {
+		Drawable drawable=null;
+		
+		Intent intent = new Intent(Intent.ACTION_MAIN, null);
+		intent.addCategory(Intent.CATEGORY_LAUNCHER);
+		intent.setPackage(pkgName);
+		List<ResolveInfo> infoList = pm.queryIntentActivities(intent, 0);
+		if (infoList!=null && infoList.size()>0 ) {
+			ResolveInfo info = infoList.get(0);
+			if (info != null) {
+				drawable = info.loadIcon(pm);
+			}
+		}
+		
+		return drawable;
 	}
 	
 	public List<AppInfo> getApp(int filter) {

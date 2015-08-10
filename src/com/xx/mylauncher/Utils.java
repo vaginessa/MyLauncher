@@ -1,7 +1,13 @@
 package com.xx.mylauncher;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.xx.mylauncher.dao.CellInfoEntity;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -25,10 +31,24 @@ public class Utils {
 		
 	}
 	
+	public static void logE(String tag, String msg) {
+		if (DEBUG) {
+			Log.e(tag, msg);
+		}
+		
+	}
+	
 	public static void log(String tag, String format, Object...objects) {
 		if (DEBUG) {
 			String msg = String.format(format, objects);
 			Log.i(tag, msg);
+		}
+	}	
+	
+	public static void logE(String tag, String format, Object...objects) {
+		if (DEBUG) {
+			String msg = String.format(format, objects);
+			Log.e(tag, msg);
 		}
 	}	
 	
@@ -172,7 +192,43 @@ public class Utils {
 	
 	
 	
-	
+	public static List<CellInfo> convertDbinfosToCellInfo(final List<CellInfoEntity> list) {
+		final List<CellInfo> newList = new ArrayList<CellInfo>();
+		
+		if (newList != null) {
+			for (CellInfoEntity item : list) {
+				final CellInfo cellInfo = new CellInfo();
+				cellInfo.setCellHSpan(item.getCellHSpan());
+				cellInfo.setCellVSpan(item.getCellVSpan());
+				cellInfo.setCellX(item.getCellX());
+				cellInfo.setCellY(item.getCellY());
+				cellInfo.setHotSeatCellX(item.getHotseatCellX());
+				cellInfo.setHotSeatCellY(item.getHotseatCellY());
+				cellInfo.setIconName(item.getIconName());
+				cellInfo.setId(item.getId());
+				cellInfo.setLocation(item.getCellLocation()==LauncherDBManager.HOTSEAT ? CellInfo.CellLocation.HOTSEAT : CellInfo.CellLocation.WORKSPACE  );
+				cellInfo.setScreen(item.getScreen());
+				cellInfo.setType(item.getCellType()==LauncherDBManager.SHORT_CUT ? CellInfo.CellType.SHORT_CUT : CellInfo.CellType.WIDGET);
+				cellInfo.setWidgetId(item.getWidgetid());
+				
+				String pkgName = item.getPkgName();
+				String clsName = item.getClsName();
+				if (item.getCellType() == LauncherDBManager.SHORT_CUT) {
+					if (pkgName != null && clsName != null) {
+						ComponentName cName = new ComponentName(pkgName, clsName);
+						Intent intent = new Intent();
+						intent.setComponent(cName);
+//						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+						cellInfo.setIntent(intent);
+					}
+				}
+				
+				newList.add(cellInfo);
+			}
+		}
+		
+		return newList;
+	}
 	
 	
 	

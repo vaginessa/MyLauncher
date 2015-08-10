@@ -122,13 +122,33 @@ public class WidgetManager {
 		Utils.log(TAG, "createWidget");
 		
 		int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
+
+		createWidget(appWidgetId);
+	}
+	
+	private void createWidget(int appWidgetId) {
 		AppWidgetProviderInfo appWidget = m_AppWidgetManager.getAppWidgetInfo(appWidgetId);
 		View hostView = m_WidgetHost.createView((Context)m_Launcher, appWidgetId, appWidget);
-		
-		m_Launcher.addViewInScreen(hostView, appWidget);
+
+		m_Launcher.addViewInScreen(hostView, appWidget, appWidgetId);
 		
 		Utils.log(TAG, String.format("%s, width=%d, height=%d", "add", appWidget.minWidth, appWidget.minHeight), Toast.LENGTH_SHORT);	
-	
 	}
+	
+	public void deleteAppWidgetId(int appWidgetId) {
+		if (appWidgetId != -1) {
+			m_WidgetHost.deleteAppWidgetId(appWidgetId);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 }

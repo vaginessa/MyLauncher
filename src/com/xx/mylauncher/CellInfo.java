@@ -39,6 +39,9 @@ public class CellInfo {
 	// TODO 应该包括其它可以保存到持久层的非对象信息，用来打开程序activity
 	// class package ??
 	//相应的也应该在自定义属性中补上
+	
+	/** 数据库中的id */
+	private long id;
 
 	/** 格子水平位置 */
 	private int cellX;
@@ -69,6 +72,9 @@ public class CellInfo {
 	
 	/** 所处的位置 */
 	private CellLocation location;
+	
+	/** 指定的Widget Id */
+	private int widgetId;
 	
 	public CellInfo() {
 
@@ -181,14 +187,30 @@ public class CellInfo {
 		this.location = location;
 	}
 	
+	public int getWidgetId() {
+		return widgetId;
+	}
+	public void setWidgetId(int widgetId) {
+		this.widgetId = widgetId;
+	}
+	
+	
+	public long getId() {
+		return id;
+	}
+	public void setId(long id) {
+		this.id = id;
+	}
+	
 	@Override
 	public String toString() {
-		return "CellInfo [view=" + view + ", intent=" + intent + ", cellX="
-				+ cellX + ", cellY=" + cellY + ", cellHSpan=" + cellHSpan
-				+ ", cellVSpan=" + cellVSpan + ", iconName=" + iconName
-				+ ", type=" + type + ", screen=" + screen + ", hotSeatCellX="
-				+ hotSeatCellX + ", hotSeatCellY=" + hotSeatCellY
-				+ ", location=" + location + "]";
+		return "CellInfo [view=" + view + ", intent=" + intent + ", id=" + id
+				+ ", cellX=" + cellX + ", cellY=" + cellY + ", cellHSpan="
+				+ cellHSpan + ", cellVSpan=" + cellVSpan + ", iconName="
+				+ iconName + ", type=" + type + ", screen=" + screen
+				+ ", hotSeatCellX=" + hotSeatCellX + ", hotSeatCellY="
+				+ hotSeatCellY + ", location=" + location + ", widgetId="
+				+ widgetId + "]";
 	}
 
 }

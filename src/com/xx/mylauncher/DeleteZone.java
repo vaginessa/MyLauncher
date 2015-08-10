@@ -48,6 +48,8 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 	
 	private Rect m_RectView = new Rect();
 	
+	private MainActivity m_Launcher;
+	
 	public DeleteZone(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
@@ -133,7 +135,9 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 		
 	}
 	
-	
+	public void setLauncher(MainActivity launcher) {
+		this.m_Launcher = launcher;
+	}
 	
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -255,6 +259,12 @@ public class DeleteZone extends FrameLayout implements DropTarget, DragControlle
 		/*
 		 * 可以做一些删除的效果
 		 */
+		final CellInfo cellInfo = (CellInfo) dragInfo;
+		m_Launcher.getLauncherDBManager().deleteCell(cellInfo.getId());
+		
+		if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
+			m_Launcher.getWidgetManager().deleteAppWidgetId(cellInfo.getWidgetId());	
+		}
 		
 	}
 

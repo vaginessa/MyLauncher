@@ -6,7 +6,6 @@ import java.util.List;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -273,6 +272,12 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
 		
 		curCellLayout.onDropCompleted(dropTargetView, dragView, itemInfo, rawX, rawY, iOffX, iOffy, success);
+		
+		if (success) {
+			final CellInfo cellInfo = (CellInfo) itemInfo;
+			m_DragController.getLauncher().getLauncherDBManager().updateDragInfo(cellInfo);
+		}
+		
 	}
 
 		

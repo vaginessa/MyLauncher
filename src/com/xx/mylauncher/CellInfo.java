@@ -76,6 +76,9 @@ public class CellInfo {
 	/** 指定的Widget Id */
 	private int widgetId;
 	
+	/** 包名，如果有的话 */
+	private String pkgName;
+	
 	public CellInfo() {
 
 	}
@@ -202,6 +205,14 @@ public class CellInfo {
 		this.id = id;
 	}
 	
+	public String getPkgName() {
+		return pkgName;
+	}
+	
+	public void setPkgName(String pkgName) {
+		this.pkgName = pkgName;
+	}
+	
 	@Override
 	public String toString() {
 		return "CellInfo [view=" + view + ", intent=" + intent + ", id=" + id
@@ -210,7 +221,7 @@ public class CellInfo {
 				+ iconName + ", type=" + type + ", screen=" + screen
 				+ ", hotSeatCellX=" + hotSeatCellX + ", hotSeatCellY="
 				+ hotSeatCellY + ", location=" + location + ", widgetId="
-				+ widgetId + "]";
+				+ widgetId + ", pkgName=" + pkgName + "]";
 	}
 
 }

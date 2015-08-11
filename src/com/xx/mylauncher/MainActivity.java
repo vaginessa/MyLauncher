@@ -3,6 +3,7 @@ package com.xx.mylauncher;
 import java.util.List;
 import java.util.Random;
 
+import com.xx.mylauncher.CellLayout.LayoutParams;
 import com.xx.mylauncher.dao.CellInfoEntity;
 
 import android.app.Activity;
@@ -12,6 +13,7 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -88,6 +90,8 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		m_AppManager = AppManager.getInstance(this);
 		m_WidgetManager = WidgetManager.getInstance(this, this);
+		
+//		loadAndAdapterItemViews();
 	}
 
 	@Override
@@ -97,6 +101,14 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 			m_WidgetManager.onResume();
 		}
 		
+	}
+	
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (hasFocus) {
+			loadAndAdapterItemViews();			
+		}
 	}
 	
 	@Override
@@ -177,9 +189,48 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_LauncherDBManager.addShortCut(cellInfo, appInfo);
 	}
 	
-	
+	/**
+	 * 加载应用程序/Widget到屏幕中，从数据中加载
+	 * @param cellInfo
+	 * @param view
+	 */
 	private void addViewInCellLayout(final CellInfo cellInfo, final View view) {
+		Utils.log(TAG, "load workspace item view");
 		
+		final int iScreen = cellInfo.getScreen();
+		final CellLayout cellLayout = m_Workspace.getSpecifyCellLayout(iScreen);
+		cellInfo.setView(view);
+		view.setTag(cellInfo);
+		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
+		lp.cellX = cellInfo.getCellX();
+		lp.cellY = cellInfo.getCellY();
+		lp.cellHSpan = cellInfo.getCellHSpan();
+		lp.cellVSpan = cellInfo.getCellVSpan();
+		view.setLayoutParams(lp);
+		view.setFocusable(true);
+		view.setOnLongClickListener(this);
+		view.setOnClickListener(this);
+		
+		cellLayout.addView(view);
+	}
+	
+	/**
+	 * 加载应用程序到HotSeat中，从数据库中加载
+	 * @param cellInfo
+	 * @param view
+	 */
+	private void addViewInHotSeat(final CellInfo cellInfo, final View view) {
+		Utils.log(TAG, "load hotseat item view");
+		
+		final HotSeat hotSeat = m_HotSeat;
+		cellInfo.setView(view);
+		view.setTag(cellInfo);
+		
+		view.setFocusable(true);
+		view.setOnLongClickListener(this);
+		view.setOnClickListener(this);
+		
+		hotSeat.addView(view);
 	}
 	
 	
@@ -317,7 +368,11 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		Object object = v.getTag();
 		if (object instanceof CellInfo) {
 			CellInfo cellInfo = (CellInfo) object;
-			Utils.safetyStartActivity(cellInfo.getIntent(), this);
+			if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
+				Utils.safetyStartActivity(cellInfo.getIntent(), this);
+				
+			}
+			
 		}
 		
 	} 
@@ -513,7 +568,12 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 	 * 加载所有的item view
 	 */
 	private void loadAndAdapterItemViews() {
+		Utils.log(TAG, "loadAndAdapterItemViews");
+		
 		final List<CellInfoEntity> list = m_LauncherDBManager.loadAllItemViews();
+		
+		Utils.log(TAG, list.toString());
+		
 		List<CellInfo> resultList = null;
 		if (list != null) {
 			//dto
@@ -522,26 +582,34 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		if (resultList != null ) {
 			//adapter
+			PackageManager pm = getPackageManager();
 			for (CellInfo cellInfo : resultList) {
 				final CellInfo.CellLocation location = cellInfo.getLocation();
 				final CellInfo.CellType type = cellInfo.getType();
-				// 根据包名获取icon
-				final ShortCutView2 itemView = new ShortCutView2(this);
 				
 				if (location == CellInfo.CellLocation.WORKSPACE) {
 					if (type == CellInfo.CellType.SHORT_CUT) {
+						// 根据包名获取icon
+						final ShortCutView2 itemView = new ShortCutView2(this);
+						itemView.setIcon(m_AppManager.getIcon(cellInfo.getPkgName(), pm));
+						itemView.setLabel(cellInfo.getIconName());
 						
+						addViewInCellLayout(cellInfo, itemView);
 						
 					} else if (type == CellInfo.CellType.WIDGET) {
-						
+						final int widgetId = cellInfo.getWidgetId();
+						final View widgetView = m_WidgetManager.getWidgetView(widgetId);
+						addViewInCellLayout(cellInfo, widgetView);
 						
 					}
 					
-					
 				} else if (location == CellInfo.CellLocation.HOTSEAT) {
 					if (type == CellInfo.CellType.SHORT_CUT) {
+						final ShortCutView2 itemView = new ShortCutView2(this);
+						itemView.setIcon(m_AppManager.getIcon(cellInfo.getPkgName(), pm));
+						itemView.setLabel(cellInfo.getIconName());
 						
-						
+						addViewInHotSeat(cellInfo, itemView);
 					} else if (type == CellInfo.CellType.WIDGET) {
 						Utils.logE(TAG, "不应该出现这种情况");
 					}

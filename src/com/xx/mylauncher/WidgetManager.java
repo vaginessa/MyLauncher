@@ -141,7 +141,17 @@ public class WidgetManager {
 		}
 	}
 	
-	
+	/**
+	 * 获取Widget View
+	 * @param widgetId
+	 * @return
+	 */
+	public View getWidgetView(int widgetId) {
+		AppWidgetProviderInfo appWidget = m_AppWidgetManager.getAppWidgetInfo(widgetId);
+		View hostView = m_WidgetHost.createView((Context)m_Launcher, widgetId, appWidget);
+		
+		return hostView;
+	}
 	
 	
 	

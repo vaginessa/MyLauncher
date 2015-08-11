@@ -81,7 +81,7 @@ public class LauncherDBDAO {
 		CellInfoEntityDao dao = m_DaoSession.getCellInfoEntityDao();
 		dao.deleteByKey(id);
 		
-		Utils.log(TAG, "elete a cell by id");
+		Utils.log(TAG, "delete a cell by id");
 	}
 	
 	/**
@@ -90,12 +90,16 @@ public class LauncherDBDAO {
 	 */
 	public long updateOrInsert(CellInfoEntity cellInfoEntity) {
 		CellInfoEntityDao dao = m_DaoSession.getCellInfoEntityDao();
+
+		Utils.log(TAG, "插入或更新一个格子信息");
 		return dao.insertOrReplace(cellInfoEntity);
 	}
 	
 	public void updateCellInfoEntity(CellInfoEntity cellInfoEntity) {
 		CellInfoEntityDao dao = m_DaoSession.getCellInfoEntityDao();
 		dao.update(cellInfoEntity);
+		
+		Utils.log(TAG, "更新格子信息");
 	}
 	
 	/**

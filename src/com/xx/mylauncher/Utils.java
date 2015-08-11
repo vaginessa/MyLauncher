@@ -195,21 +195,22 @@ public class Utils {
 	public static List<CellInfo> convertDbinfosToCellInfo(final List<CellInfoEntity> list) {
 		final List<CellInfo> newList = new ArrayList<CellInfo>();
 		
-		if (newList != null) {
+		if (list != null) {
 			for (CellInfoEntity item : list) {
 				final CellInfo cellInfo = new CellInfo();
 				cellInfo.setCellHSpan(item.getCellHSpan());
 				cellInfo.setCellVSpan(item.getCellVSpan());
 				cellInfo.setCellX(item.getCellX());
 				cellInfo.setCellY(item.getCellY());
-				cellInfo.setHotSeatCellX(item.getHotseatCellX());
+				cellInfo.setHotSeatCellX(item.getHotseatCellX()==null?-);
 				cellInfo.setHotSeatCellY(item.getHotseatCellY());
-				cellInfo.setIconName(item.getIconName());
+				cellInfo.setIconName(item.getLabelName());
 				cellInfo.setId(item.getId());
 				cellInfo.setLocation(item.getCellLocation()==LauncherDBManager.HOTSEAT ? CellInfo.CellLocation.HOTSEAT : CellInfo.CellLocation.WORKSPACE  );
 				cellInfo.setScreen(item.getScreen());
 				cellInfo.setType(item.getCellType()==LauncherDBManager.SHORT_CUT ? CellInfo.CellType.SHORT_CUT : CellInfo.CellType.WIDGET);
 				cellInfo.setWidgetId(item.getWidgetid());
+				cellInfo.setPkgName(item.getPkgName());
 				
 				String pkgName = item.getPkgName();
 				String clsName = item.getClsName();

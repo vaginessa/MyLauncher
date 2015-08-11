@@ -202,7 +202,7 @@ public class Utils {
 				cellInfo.setCellVSpan(item.getCellVSpan());
 				cellInfo.setCellX(item.getCellX());
 				cellInfo.setCellY(item.getCellY());
-				cellInfo.setHotSeatCellX(item.getHotseatCellX()==null?-);
+				cellInfo.setHotSeatCellX(item.getHotseatCellX());
 				cellInfo.setHotSeatCellY(item.getHotseatCellY());
 				cellInfo.setIconName(item.getLabelName());
 				cellInfo.setId(item.getId());

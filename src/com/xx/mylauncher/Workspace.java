@@ -273,7 +273,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		
 		curCellLayout.onDropCompleted(dropTargetView, dragView, itemInfo, rawX, rawY, iOffX, iOffy, success);
 		
-		if (success) {
+		if (success && !(dropTargetView instanceof DeleteZone) ) {
 			final CellInfo cellInfo = (CellInfo) itemInfo;
 			m_DragController.getLauncher().getLauncherDBManager().updateDragInfo(cellInfo);
 		}

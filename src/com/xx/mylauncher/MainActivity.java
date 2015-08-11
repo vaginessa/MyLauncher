@@ -211,6 +211,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
 		
+		cellLayout.flagOcuped(cellInfo);
 		cellLayout.addView(view);
 	}
 	
@@ -225,11 +226,18 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		final HotSeat hotSeat = m_HotSeat;
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
+		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
+		lp.cellX = cellInfo.getCellX();
+		lp.cellY = cellInfo.getCellY();
+		lp.cellHSpan = cellInfo.getCellHSpan();
+		lp.cellVSpan = cellInfo.getCellVSpan();
+		view.setLayoutParams(lp);
 		
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
 		
+		hotSeat.flagOcuped(cellInfo);
 		hotSeat.addView(view);
 	}
 	
@@ -564,12 +572,19 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 	}
 
+	private boolean m_bIsLoaded = false;
+	
 	/**
 	 * 加载所有的item view
 	 */
 	private void loadAndAdapterItemViews() {
+		if (m_bIsLoaded) {
+			return;
+		}
+		
 		Utils.log(TAG, "loadAndAdapterItemViews");
 		
+		m_bIsLoaded = true;
 		final List<CellInfoEntity> list = m_LauncherDBManager.loadAllItemViews();
 		
 		Utils.log(TAG, list.toString());
@@ -608,6 +623,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 						final ShortCutView2 itemView = new ShortCutView2(this);
 						itemView.setIcon(m_AppManager.getIcon(cellInfo.getPkgName(), pm));
 						itemView.setLabel(cellInfo.getIconName());
+						itemView.setLabelVisibility(View.GONE);
 						
 						addViewInHotSeat(cellInfo, itemView);
 					} else if (type == CellInfo.CellType.WIDGET) {

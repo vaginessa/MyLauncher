@@ -392,6 +392,15 @@ public class CellLayout extends ViewGroup {
 		}
 	}
 	
+	public void flagOcuped(final CellInfo cellInfo) {
+		final int cellX = cellInfo.getCellX();
+		final int cellY = cellInfo.getCellY();
+		final int cellHSpan = cellInfo.getCellHSpan();
+		final int cellVSpan = cellInfo.getCellVSpan();
+		
+		flagOcupied(cellX, cellY, cellHSpan, cellVSpan);
+	}
+	
    /**
     * @see DragSource#onDropCompleted(View, View, Object, int, int, int, int, boolean) 
     */
@@ -741,8 +750,14 @@ public class CellLayout extends ViewGroup {
 			dragObjectInfo.cellHSpan = cellInfo.getCellHSpan();
 			dragObjectInfo.cellVSpan = cellInfo.getCellVSpan();
 
+			
 			boolean r1 = flagCellsOcupied(dragObjectInfo);
 
+			if (r1) {
+				cellInfo.setCellX(dragObjectInfo.cellX);
+				cellInfo.setCellY(dragObjectInfo.cellY);
+			}
+			
 			adjustCoors(dragObjectInfo, cellInfo);
 
 			// invalidate(); //postInvalidate();

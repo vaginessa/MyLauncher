@@ -350,6 +350,10 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 		m_bOccupied[cellInfo.getHotSeatCellX()] = false;
 	}
 
+	public void flagOcuped(CellInfo cellInfo) {
+		m_bOccupied[cellInfo.getHotSeatCellX()] = true;
+	}
+	
 	@Override
 	public void setDragController(DragController dragger) {
 		// TODO Auto-generated method stub
@@ -406,11 +410,12 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 			onDropCompletedInSelf(dragView, itemInfo, success);
 		}
 		
-		if (success) {
+		if (success && !(dropTargetView instanceof DeleteZone) ) {
 			final CellInfo cellInfo = (CellInfo) itemInfo;
 			m_Launcher.getLauncherDBManager().updateDragInfo(cellInfo);
 		}
 	}
+	
 	/**
 	 * 
 	 * @param dragView

@@ -25,6 +25,8 @@ public class LauncherDBManager {
 	 */
 	public static final int WORKSPACE = 1;
 	public static final int HOTSEAT = 2;
+
+	private static final String TAG = "LauncherDBManager";
 	
 	
 	private LauncherDBManager(Context context) {
@@ -55,6 +57,8 @@ public class LauncherDBManager {
 		entity.setCellY(cellInfo.getCellY());
 		entity.setCellHSpan(cellInfo.getCellHSpan());
 		entity.setCellVSpan(cellInfo.getCellVSpan());
+		entity.setHotseatCellX(cellInfo.getHotSeatCellX());
+		entity.setHotseatCellY(cellInfo.getHotSeatCellY());
 		entity.setWidgetid(cellInfo.getWidgetId());
 		entity.setScreen(cellInfo.getScreen());
 		entity.setCellType(WIDGET);
@@ -82,6 +86,9 @@ public class LauncherDBManager {
 		entity.setLabelName(appInfo.getLabelName());
 		entity.setPkgName(appInfo.getPkgName());
 		entity.setScreen(cellInfo.getScreen());
+		entity.setHotseatCellX(cellInfo.getHotSeatCellX());
+		entity.setHotseatCellY(cellInfo.getHotSeatCellY());
+		entity.setWidgetid(cellInfo.getWidgetId());
 		
 		long id = m_Dao.insertCellInfo(entity);
 		
@@ -115,6 +122,9 @@ public class LauncherDBManager {
 		entity.setScreen(cellInfo.getScreen());
 		entity.setWidgetid(cellInfo.getWidgetId());
 		
+		Utils.log(TAG, "cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d, cellHotseatX=%d, cellHotseatY=%d", 
+				cellInfo.getCellX(), cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan(), cellInfo.getHotSeatCellX(), cellInfo.getHotSeatCellY());
+		
 		m_Dao.updateCellInfoEntity(entity);
 	}
 	
@@ -128,7 +138,6 @@ public class LauncherDBManager {
 		
 		return list;
 	}
-	
 	
 	
 	

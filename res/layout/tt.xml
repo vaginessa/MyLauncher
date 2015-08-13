@@ -5,13 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" 
     android:orientation="vertical"
-    android:background="#90000000" >
+    android:background="@drawable/wallerpaper" >
     
     <com.xx.mylauncher.DeleteZone
         android:id="@+id/deletezone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/holo_purple"
+        android:background="@android:color/transparent"
         launcher:trashcan="@drawable/trashcan" />
     
     <FrameLayout 
@@ -28,7 +28,7 @@
                 android:id="@+id/celllayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/holo_orange_light"
+                android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
 
             </com.xx.mylauncher.CellLayout>
@@ -38,7 +38,7 @@
                 android:id="@+id/celllayout1"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/holo_blue_bright"
+                android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
             </com.xx.mylauncher.CellLayout>
 
@@ -46,7 +46,7 @@
                 android:id="@+id/celllayout2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/holo_green_dark"
+                android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
             </com.xx.mylauncher.CellLayout>
 
@@ -54,7 +54,7 @@
                 android:id="@+id/celllayout3"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/holo_orange_light"
+                android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
             </com.xx.mylauncher.CellLayout>
 
@@ -62,7 +62,7 @@
                 android:id="@+id/celllayout4"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/holo_red_light"
+                android:background="@android:color/transparent"
                 launcher:cellSize="78dp" >
             </com.xx.mylauncher.CellLayout>
             
@@ -90,7 +90,7 @@
 	    android:id="@+id/hotseat"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    android:background="@android:color/holo_purple">
+	    android:background="@android:color/transparent">
 	</com.xx.mylauncher.HotSeat>	
 	
 	

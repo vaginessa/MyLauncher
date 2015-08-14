@@ -11,7 +11,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.Log;
@@ -184,13 +190,45 @@ public class Utils {
 	
 	public static StateListDrawable getStateListDrawable(Context context, Drawable normalDrawable, Drawable pressDrawable) {
 		StateListDrawable stateListDrawable = new StateListDrawable();
-		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, pressDrawable);
+		stateListDrawable.addState(
+				new int[]{android.R.attr.state_pressed }, pressDrawable);
+
 		stateListDrawable.addState(new int[]{}, normalDrawable);
 		
 		return stateListDrawable;
 	}
 	
+	/**
+	 * 根据一个传入的Bitmap创建一个StateListDrawable对象
+	 * 效果是缩小变亮
+	 * @param context
+	 * @param srcBitmap
+	 * @return
+	 */
+	public static StateListDrawable getStateListDrawable(Context context, Bitmap srcBitmap) {
+		if (srcBitmap == null) {
+			srcBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.item_bg_default);
+		}
+		final Drawable normalDrawable = new BitmapDrawable(context.getResources(), srcBitmap);
+		final int iSrcWidth = srcBitmap.getWidth();
+		final int iSrcHeight = srcBitmap.getHeight();
+		final float fScale = 0.6f;
+		Bitmap pressBitmap = Bitmap.createScaledBitmap(srcBitmap, (int)(iSrcWidth*fScale), (int)(iSrcHeight*fScale), true);
+		BitmapDrawable pressDrawable = new BitmapDrawable(context.getResources(), pressBitmap);
+		ColorFilter colorMatrix = new ColorMatrixColorFilter(new float[]{
+				1, 0, 0, 0, 80, 
+				0, 1, 0, 0, 80,
+				0, 0, 1, 0, 100, 
+				0, 0, 0, 1, 0  });
+		
+		pressDrawable.setColorFilter(colorMatrix);
+		
+		return getStateListDrawable(context, normalDrawable, pressDrawable);
+	}
 	
+	public static StateListDrawable getStateListDrawable(Context context, final View view) {
+		return getStateListDrawable(context, getViewBitmap(view) );
+	}
 	
 	public static List<CellInfo> convertDbinfosToCellInfo(final List<CellInfoEntity> list) {
 		final List<CellInfo> newList = new ArrayList<CellInfo>();

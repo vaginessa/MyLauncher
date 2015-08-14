@@ -1,11 +1,16 @@
 package com.xx.mylauncher;
 
+import java.lang.ref.SoftReference;
 import java.util.List;
 import java.util.Random;
 
 import com.xx.mylauncher.CellLayout.LayoutParams;
 import com.xx.mylauncher.dao.CellInfoEntity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -18,8 +23,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.BounceInterpolator;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -28,7 +36,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements View.OnLongClickListener, View.OnClickListener {
+public class MainActivity  extends LauncherBaseActivity
+								implements View.OnLongClickListener, View.OnClickListener, View.OnTouchListener {
 	
 	private static final String TAG = "MainActivity";
 	
@@ -91,7 +100,14 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		m_AppManager = AppManager.getInstance(this);
 		m_WidgetManager = WidgetManager.getInstance(this, this);
 		
-//		loadAndAdapterItemViews();
+		
+		initRes();
+		
+	}
+
+	private void initRes() {
+		ViewConfiguration viewConfiguration = ViewConfiguration.get(this);
+		iLimitDistanceScrollFlag = viewConfiguration.getScaledTouchSlop();
 	}
 
 	@Override
@@ -175,6 +191,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
+//		view.post(new ViewPostSetDrawableBackground(this, view) );
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
 		lp.cellX = cellX;
 		lp.cellY = cellY;
@@ -184,6 +201,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
+		view.setOnTouchListener(this);
 //		m_CellLayout.addView(view);
 		curCellLayout.addView(view);
 		m_LauncherDBManager.addShortCut(cellInfo, appInfo);
@@ -201,6 +219,11 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		final CellLayout cellLayout = m_Workspace.getSpecifyCellLayout(iScreen);
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
+//		
+//		if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
+//			view.post(new ViewPostSetDrawableBackground(this, view) );	
+//		}
+//		
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
 		lp.cellX = cellInfo.getCellX();
 		lp.cellY = cellInfo.getCellY();
@@ -210,6 +233,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
+		view.setOnTouchListener(this);
 		
 		cellLayout.flagOcuped(cellInfo);
 		cellLayout.addView(view);
@@ -226,6 +250,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		final HotSeat hotSeat = m_HotSeat;
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
+//		view.post(new ViewPostSetDrawableBackground(this, view) );
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
 		lp.cellX = cellInfo.getCellX();
 		lp.cellY = cellInfo.getCellY();
@@ -236,6 +261,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		view.setFocusable(true);
 		view.setOnLongClickListener(this);
 		view.setOnClickListener(this);
+		view.setOnTouchListener(this);
 		
 		hotSeat.flagOcuped(cellInfo);
 		hotSeat.addView(view);
@@ -377,8 +403,7 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		if (object instanceof CellInfo) {
 			CellInfo cellInfo = (CellInfo) object;
 			if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
-				Utils.safetyStartActivity(cellInfo.getIntent(), this);
-				
+				v.post(new ViewOnClickRunnable(this, v));
 			}
 			
 		}
@@ -639,6 +664,114 @@ public class MainActivity extends Activity implements View.OnLongClickListener, 
 		
 		
 	}	//end func
+	
+	
+	
+	static class ViewPostSetDrawableBackground implements Runnable {
+		
+		private SoftReference<Context> m_SrContext;
+		private View m_View;
+		
+		public ViewPostSetDrawableBackground(Context context, View view) {
+			this.m_SrContext = new SoftReference<Context>(context);
+			this.m_View = view;
+		}
+		
+		@Override
+		public void run()  {
+			if (m_View instanceof ShortCutView2) {
+				m_View.setBackground(Utils.getStateListDrawable(m_SrContext.get(), m_View));	
+			}
+			
+		}
+	}
+	
+	static class ViewOnClickRunnable implements Runnable {
+		
+		private static final long ANIM_DURATION = 250;
+		
+		private SoftReference<Context> m_SrContext;
+		private View m_View;
+		
+		public ViewOnClickRunnable(Context context, View view) {
+			m_SrContext = new SoftReference<Context>(context);
+			m_View = view;
+		}
+		
+		@Override
+		public void run() {
+			AnimatorSet animSet= new AnimatorSet();
+			ObjectAnimator anim1 = ObjectAnimator.ofFloat(m_View, "scaleX", 1.0f, 0.8f, 1.0f);
+			ObjectAnimator anim2 = ObjectAnimator.ofFloat(m_View, "scaleY", 1.0f, 0.8f, 1.0f);
+			animSet.setDuration(ANIM_DURATION);
+			animSet.setInterpolator(new BounceInterpolator() );
+			animSet.addListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					super.onAnimationEnd(animation);
+					if (m_View instanceof ShortCutView2) {
+						final CellInfo cellInfo = (CellInfo) m_View.getTag();
+						Utils.safetyStartActivity(cellInfo.getIntent(), m_SrContext.get() );	
+					}
+					
+				}
+			});
+			
+			if (m_ViewOnTouchRunnable != null) {
+				m_View.removeCallbacks(m_ViewOnTouchRunnable);
+			}
+			
+			animSet.playTogether(anim1, anim2);
+			animSet.start();
+		}
+		
+	}
+	
+	static class ViewOnTouchRunnable implements Runnable {
+		
+		private static final long ANIM_DURATION = 250;
+		
+		private SoftReference<Context> m_SrContext;
+		private View m_View;
+		
+		public ViewOnTouchRunnable(Context context, View view) {
+			m_SrContext = new SoftReference<Context>(context);
+			m_View = view;
+		}
+		
+		@Override
+		public void run() {
+			AnimatorSet animSet= new AnimatorSet();
+			ObjectAnimator anim1 = ObjectAnimator.ofFloat(m_View, "scaleX", 1.0f, 0.87f, 1.0f);
+			ObjectAnimator anim2 = ObjectAnimator.ofFloat(m_View, "scaleY", 1.0f, 0.87f, 1.0f);
+			animSet.setDuration(ANIM_DURATION);
+			animSet.setInterpolator(new BounceInterpolator() );
+			animSet.addListener(new AnimatorListenerAdapter() {
+			});
+			
+			animSet.playTogether(anim1, anim2);
+			animSet.start();
+		}
+		
+	}
+	
+	
+	private static ViewOnTouchRunnable m_ViewOnTouchRunnable;
+	private int iLimitDistanceScrollFlag;
+	
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		final int iAction = event.getAction();
+		
+		if (iAction == MotionEvent.ACTION_DOWN ) {
+			m_ViewOnTouchRunnable = new ViewOnTouchRunnable(this, v);
+			v.postDelayed(m_ViewOnTouchRunnable, 100);
+		}
+		
+		
+		
+		return false;
+	}
 	
 	
 }

@@ -2,6 +2,12 @@ package com.xx.mylauncher;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorFilter;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -51,6 +57,11 @@ public class ShortCutView2 extends FrameLayout {
 	
 	public void setLabel(String label) {
 		m_TxvLabel.setText(label);
+	}
+	
+	public void setViewContentVisiblity(int visibility) {
+		m_ImgView.setVisibility(visibility);
+		m_TxvLabel.setVisibility(visibility);
 	}
 	
 	public void setLabelVisibility(int visibility) {

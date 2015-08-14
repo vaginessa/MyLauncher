@@ -25,9 +25,9 @@
             android:stateNotNeeded="true"
             android:theme="@android:style/Theme.Light.NoTitleBar"  >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
+    			 <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                   <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

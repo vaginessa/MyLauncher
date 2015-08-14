@@ -7,6 +7,7 @@ public class LauncherBaseActivity extends Activity {
 	
 	@Override
 	public void onBackPressed() {
-		return;
+		super.onBackPressed();
+//		return;
 	}
 }

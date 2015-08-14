@@ -231,10 +231,11 @@ public class MainActivity  extends LauncherBaseActivity
 		lp.cellVSpan = cellInfo.getCellVSpan();
 		view.setLayoutParams(lp);
 		view.setFocusable(true);
-		view.setOnLongClickListener(this);
+		
 		view.setOnClickListener(this);
 		view.setOnTouchListener(this);
-		
+		view.setOnLongClickListener(this);
+
 		cellLayout.flagOcuped(cellInfo);
 		cellLayout.addView(view);
 	}
@@ -766,6 +767,7 @@ public class MainActivity  extends LauncherBaseActivity
 		if (iAction == MotionEvent.ACTION_DOWN ) {
 			m_ViewOnTouchRunnable = new ViewOnTouchRunnable(this, v);
 			v.postDelayed(m_ViewOnTouchRunnable, 100);
+			
 		}
 		
 		

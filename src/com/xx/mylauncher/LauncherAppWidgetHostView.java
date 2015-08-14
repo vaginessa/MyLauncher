@@ -72,6 +72,26 @@ public class LauncherAppWidgetHostView extends AppWidgetHostView {
         // Otherwise continue letting touch events fall through to children
         return false;
     }
+    
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+		switch (event.getAction()) {
+		case MotionEvent.ACTION_DOWN: {
+			break;
+		}
+
+		case MotionEvent.ACTION_UP:
+		case MotionEvent.ACTION_CANCEL:
+			mHasPerformedLongPress = false;
+			if (mPendingCheckForLongPress != null) {
+				removeCallbacks(mPendingCheckForLongPress);
+			}
+			break;
+		}
+
+		return super.onTouchEvent(event);
+    }
 
     class CheckForLongPress implements Runnable {
         private int mOriginalWindowAttachCount;
@@ -81,6 +101,7 @@ public class LauncherAppWidgetHostView extends AppWidgetHostView {
                     && mOriginalWindowAttachCount == getWindowAttachCount()
                     && !mHasPerformedLongPress) {
                 if (performLongClick()) {
+//                	Utils.toast(getContext(), "perform long press");
                     mHasPerformedLongPress = true;
                 }
             }

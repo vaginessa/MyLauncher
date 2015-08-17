@@ -5,23 +5,25 @@ import android.animation.Animator.AnimatorListener;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+
+import com.xx.mylauncher.AnimatorFactory.AnimatorDragFollow1;
+import com.xx.mylauncher.CellLayout.DragObjectInfo;
 
 /**
  * 拖动层，绘制icon的拖动效果及拖动时的一些辅助效果
  * @author baoxing
  *
  */
-public class DragLayer extends LinearLayout {
+public class DragLayer extends LinearLayout implements DragController.DragListener {
 	
 	private static final String TAG = "DragLayer";
 	
@@ -33,6 +35,14 @@ public class DragLayer extends LinearLayout {
 	/** 测试用 */
 	private Paint m_PaintTemp;
 	private Paint m_PaintTemp1;
+	
+	private Rect m_RectTempDragFollowSelf = new Rect();
+	
+	/**
+	 * 处理跟随动画的封装类
+	 */
+	private AnimatorFactory.AnimatorDragFollow1 m_AnimatorDragFollow;
+	
 	
 	public DragLayer(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
@@ -65,27 +75,9 @@ public class DragLayer extends LinearLayout {
 	protected void dispatchDraw(Canvas canvas) {
 		super.dispatchDraw(canvas);
 		
-		/*
-		 * 更新在拖动时的辅助信息，比如拖动到哪的可以预绘制的边框，不可以放置时的红色蒙板提醒
-		 */
-		if (m_DragObjectInfo != null) {
-			
-			if (m_DragObjectInfo.isInvalid) {
-				//只先测试可以放置的效果
-				if (m_DragObjectInfo.canDrop) {
-//					Utils.log(TAG, "dispatch-绘制拖动效果");
-					Utils.log(TAG, "canDrag");
-					int left = m_DragObjectInfo.x;
-					int top = m_DragObjectInfo.y;
-					int right = left + m_DragObjectInfo.width;
-					int bottom = top + m_DragObjectInfo.height;
-					
-					canvas.drawRect(left, top, right, bottom, m_PaintTemp);
-					
-					m_DragObjectInfo.reset();
-				}
-			}
-		}
+//		updateDragInfoAssist(canvas);
+		
+		updateDragFollowAnimDispatchDraw(canvas);
 		
 		/*
 		 * DragView滑回指定位置
@@ -112,6 +104,7 @@ public class DragLayer extends LinearLayout {
 		
 		
 	}
+
 	
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -259,7 +252,7 @@ public class DragLayer extends LinearLayout {
 			public void onAnimationEnd(Animator animation) {
 				if (m_DropObjectInfo.dragView != null) {
 					removeView(m_DropObjectInfo.dragView);
-					m_DropObjectInfo.dragView = null;
+//					m_DropObjectInfo.dragView = null;
 				}
 		
 				m_DropObjectInfo.animEnd();
@@ -302,6 +295,107 @@ public class DragLayer extends LinearLayout {
 		m_DragObjectInfo = info;
 		invalidate();	//call dispatchDraw
 	}
+	
+	/**
+	 * 更新跟随动画，从CellLayout中调用
+	 * @param dragObjectInfo
+	 */
+	public void updateDragFollowDrag(final DragObjectInfo dragObjectInfo) {
+		m_DragObjectInfo = dragObjectInfo;
+		m_AnimatorDragFollow.updateDragFollow(dragObjectInfo);
+	}
+	
+	/**
+	 * 更新跟随动画，从AnimatorFactory中调用
+	 * @param info
+	 */
+	public void updateDragFollowAnim(CellLayout.DragObjectInfo info) {
+		Utils.log(TAG, "updateDragFollowAnim");
+		m_DragObjectInfo = info;
+		invalidate();
+	}
+	
+	public void updateDragFollowAnim(CellLayout.DragObjectInfo info, Rect invalidRect) {
+		Utils.log(TAG, "updateDragFollowAnim");
+		m_DragObjectInfo = info;
+		invalidate(invalidRect);
+	}
+	
+	/**
+	 * 更新跟随动画
+	 * @param canvas
+	 */
+	private void updateDragFollowAnimDispatchDraw(Canvas canvas) {
+		// TODO Auto-generated method stub
+		final DragObjectInfo dragObject = m_DragObjectInfo;
+		
+		if (dragObject != null) {
+			if (dragObject.isInvalid) {
+				if (dragObject.canDrop) {
+					final DragView dragView = (DragView) m_DragObjectInfo.dragView;
+					int left = dragObject.curX;
+					int top = dragObject.curY;
+					int right = left + dragObject.width;
+					int bottom = top + dragObject.height;
+					
+//					canvas.drawRect(left, top, right, bottom, m_PaintTemp);
+					canvas.drawBitmap(dragView.getViewBitmap(), left, top, null);
+					
+					dragObject.reset();	
+					
+					m_RectTempDragFollowSelf.set(left, top, right, bottom);
+					
+					invalidate(m_RectTempDragFollowSelf);
+					
+				}
+			}
+		}
+		
+		
+	}
+	
+	/**
+	 * 初始化FollowDragObject
+	 */
+	public void initFollowDragObject() {
+		/*
+		 *初始化动画
+		 */
+		Utils.log(TAG, "initFollowDragObject");
+		m_AnimatorDragFollow = new AnimatorDragFollow1(m_DragController.getLauncher(), this);
+	}
+	
+	public void endAndClearFollowDragObject() {
+		m_AnimatorDragFollow.endDragFollowAnim();
+	}
+	
+	
+	/**
+	 * 更新在拖动时的辅助信息，比如拖动到哪的可以预绘制的边框，不可以放置时的红色蒙板提醒
+	 */
+	private void updateDragInfoAssist(Canvas canvas) {
+		
+		if (m_DragObjectInfo != null) {
+			
+			if (m_DragObjectInfo.isInvalid) {
+				if (m_DragObjectInfo.canDrop) {
+					// 只先测试可以放置的效果
+					// Utils.log(TAG, "dispatch-绘制拖动效果");
+					Utils.log(TAG, "canDrag");
+					int left = m_DragObjectInfo.x;
+					int top = m_DragObjectInfo.y;
+					int right = left + m_DragObjectInfo.width;
+					int bottom = top + m_DragObjectInfo.height;
+
+					canvas.drawRect(left, top, right, bottom, m_PaintTemp);
+
+					m_DragObjectInfo.reset();
+				}
+			}
+		}
+	}
+	
+
 	
 	
 	public void setDragController(DragController dragController) {
@@ -365,6 +459,20 @@ public class DragLayer extends LinearLayout {
 	@Override
 	protected android.widget.LinearLayout.LayoutParams generateDefaultLayoutParams() {
 		return new DragLayer.LayoutParams();
+	}
+
+	@Override
+	public void onDragStart(DragSource source, Object info, int dragAction) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onDragEnd() {
+		if (m_AnimatorDragFollow != null) {
+			m_AnimatorDragFollow.endDragFollowAnim();
+		}
+		
 	}
 	
 	

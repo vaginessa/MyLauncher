@@ -114,6 +114,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		if (iYMode == MeasureSpec.AT_MOST) {
 			Utils.log(tag, "at most");
 			iParentHeight = (int) Math.min(iYHeight, m_iScreenHeight*HEIGHT_SCALE);
+//			iParentHeight = iYHeight;
 			
 		} else if (iYMode == MeasureSpec.EXACTLY) {
 			Utils.log(tag, "exactly");
@@ -136,7 +137,8 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		 */
 		View child;
 		int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(m_iScreenWidth, MeasureSpec.EXACTLY);
-		int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(iParentHeight, MeasureSpec.EXACTLY);
+//		int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(iParentHeight, MeasureSpec.EXACTLY);
+		int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(m_iViewHeight, MeasureSpec.EXACTLY);
 		for (int i=0; i<iChildCount; i++) {
 			child = getChildAt(i);
 			child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
@@ -304,9 +306,15 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 	@Override
 	public void onDragEnter(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		// TODO Auto-generated method stub
 		Utils.log(TAG, "onDragEnter");
 		
+		if (m_ListCellLayout.size() <= 0) {
+			return;
+		}
+		
+		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
+		
+		curCellLayout.onDragEnter(source, x, y, xOffset, yOffset, dragView, dragInfo);
 	}
 
 	@Override
@@ -319,14 +327,23 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		
 		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
 		
-		curCellLayout.onDragOver(source, x, y, xOffset, yOffset, dragView, dragInfo);
+		curCellLayout.onDragOver1(source, x, y, xOffset, yOffset, dragView, dragInfo);
 	}
 
 	@Override
 	public void onDragExit(DragSource source, int x, int y, int xOffset,
 			int yOffset, DragView dragView, Object dragInfo) {
-		// TODO Auto-generated method stub
 		Utils.log(TAG, "onDragExit");
+		
+		if (m_ListCellLayout.size() <= 0) {
+			return;
+		}
+		
+		final CellLayout curCellLayout = m_ListCellLayout.get(m_iCurScreen);
+		
+		curCellLayout.onDragExit(source, x, y, xOffset, yOffset, dragView, dragInfo);
+		
+		
 	}
 	
 	@Override	
@@ -340,7 +357,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 		 * 根据所在的移动坐标值判断是否有足够大的空间去给放置
 		 * 
 		 */
-		return curCellLayout.acceptDrop(source, x, y, xOffset, yOffset, dragView, dragInfo);
+		return curCellLayout.acceptDrop1(source, x, y, xOffset, yOffset, dragView, dragInfo);
 	}
 
 	

@@ -655,8 +655,8 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 		
 		getHitRectRefDragLayer(m_TempRect, this);
 		
-		dragObjectInfo.x = iLeft + m_TempRect.left;
-		dragObjectInfo.y = iTop + m_TempRect.top;
+		dragObjectInfo.curX = dragObjectInfo.x = iLeft + m_TempRect.left;
+		dragObjectInfo.curY = dragObjectInfo.y = iTop + m_TempRect.top;
 		dragObjectInfo.width = iCellWidth;
 		dragObjectInfo.height = iCellHeight;
 	}

@@ -164,10 +164,10 @@ public class DragView extends View {
 	
 	
 	public void clearResource() {
-		if (m_ViewBitmap != null) {
-			m_ViewBitmap.recycle();
-			m_ViewBitmap = null;
-		}
+//		if (m_ViewBitmap != null) {
+//			m_ViewBitmap.recycle();
+//			m_ViewBitmap = null;
+//		}
 		
 		if (m_DeleteBitmap != null) {
 			m_DeleteBitmap.recycle();

@@ -77,6 +77,7 @@ public class MainActivity  extends LauncherBaseActivity
 		m_DragController.registerDropTarget(m_HotSeat);
 		m_DragController.registerDropTarget(m_DeleteZone);
 		m_DragController.registerDragListener(m_DeleteZone);
+		m_DragController.registerDragListener(m_DragLayer);
 //		m_CellLayout.setLauncher(this);	//TODO 先这样添加
 		m_Workspace.setDragController(m_DragController);
 		m_Workspace.setDragLayer(m_DragLayer);
@@ -191,7 +192,6 @@ public class MainActivity  extends LauncherBaseActivity
 		cellInfo.setLocation(CellInfo.CellLocation.WORKSPACE);
 		cellInfo.setView(view);
 		view.setTag(cellInfo);
-//		view.post(new ViewPostSetDrawableBackground(this, view) );
 		CellLayout.LayoutParams lp = new CellLayout.LayoutParams();
 		lp.cellX = cellX;
 		lp.cellY = cellY;
@@ -486,6 +486,10 @@ public class MainActivity  extends LauncherBaseActivity
 		return m_Workspace;
 	}
 	
+	public DragController getDragController() {
+		return m_DragController;
+	}
+	
 	public SlideIndicator getSlideIndicator() {
 		return m_SlideIndicator;
 	}
@@ -667,25 +671,6 @@ public class MainActivity  extends LauncherBaseActivity
 	}	//end func
 	
 	
-	
-	static class ViewPostSetDrawableBackground implements Runnable {
-		
-		private SoftReference<Context> m_SrContext;
-		private View m_View;
-		
-		public ViewPostSetDrawableBackground(Context context, View view) {
-			this.m_SrContext = new SoftReference<Context>(context);
-			this.m_View = view;
-		}
-		
-		@Override
-		public void run()  {
-			if (m_View instanceof ShortCutView2) {
-				m_View.setBackground(Utils.getStateListDrawable(m_SrContext.get(), m_View));	
-			}
-			
-		}
-	}
 	
 	static class ViewOnClickRunnable implements Runnable {
 		

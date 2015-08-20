@@ -3,8 +3,6 @@ package com.xx.mylauncher;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.xx.mylauncher.dao.CellInfoEntity;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -12,17 +10,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import com.xx.mylauncher.dao.CellInfoEntity;
 
 public class Utils {
 	
@@ -90,6 +88,30 @@ public class Utils {
 		toast(context, msg);
 		log(tag, msg);
 	}
+	
+	
+	public static void debugCellLayoutChildren(String tag, View[][] children) {
+		Utils.log(tag, "-------------debug cellLayout children start---------------------");
+		CellInfo cellInfo;
+		View view;
+		for (int i=0; i<children.length; i++) {
+			for (int j=0; j<children[i].length; j++) {
+				view = children[i][j];
+				if (view == null) {
+					Utils.log(tag, "children[%d][%d]：null", i, j);
+				} else {
+					cellInfo = (CellInfo) view.getTag();
+					Utils.log(tag, "children[%d][%d]：cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d", 
+												i, j, cellInfo.getCellX(), cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan()  );
+				}
+			}
+			
+		}
+
+		Utils.log(tag, "-------------debug cellLayout children end---------------------");
+	}
+	
+	
 	
 	private static int m_iStatusHeight = -1;
 	

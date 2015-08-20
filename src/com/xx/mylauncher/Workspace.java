@@ -3,6 +3,8 @@ package com.xx.mylauncher;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.xx.mylauncher.CellInfo.CellLocation;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
@@ -280,6 +282,9 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 			m_DragController.getLauncher().getLauncherDBManager().updateDragInfo(cellInfo);
 		}
 		
+		final boolean success1 = success;
+			
+		m_DragLayer.swapItemOnComplete(Workspace.this, success1);
 	}
 
 		

@@ -414,6 +414,8 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 			final CellInfo cellInfo = (CellInfo) itemInfo;
 			m_Launcher.getLauncherDBManager().updateDragInfo(cellInfo);
 		}
+		
+		m_DragLayer.swapItemOnComplete(this, success);
 	}
 	
 	/**

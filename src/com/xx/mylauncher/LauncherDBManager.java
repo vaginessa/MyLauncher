@@ -139,6 +139,14 @@ public class LauncherDBManager {
 		return list;
 	}
 	
+	/**
+	 * 根据id返回一条记录
+	 * @param id
+	 * @return
+	 */
+	public CellInfoEntity loadEntity(long id) {
+		return m_Dao.loadCellInfoEntity(id);
+	}
 	
 	
 }

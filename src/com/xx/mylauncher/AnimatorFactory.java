@@ -4,13 +4,17 @@ import java.util.Queue;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.graphics.Rect;
+import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
 
 import com.xx.mylauncher.CellLayout.DragObjectInfo;
+import com.xx.mylauncher.CellLayout.SwapItemObject;
 
 /**
  * 动画工厂类
@@ -21,12 +25,244 @@ public class AnimatorFactory {
 
 	
 	
+	/**
+	 * 交换两个shortcut item view 的动画处理类
+	 * @author baoxing
+	 *
+	 */
+	static class AnimatorSwapItem {
+		private static final int ANIM_ROCK_OFFSET_X = 0;
+		private static final int ANIM_ROCK_OFFSET_Y = -15;
+		private static final long ANIM_MOVE_HINT_DURATION = 200;
+		private static final long ANIM_ROCK_HINT_DURATION = 300;
+		private static final long ANIM_FOLLOW_BACK_DURATION = 150;
+		private static final String TAG = "AnimatorSwapItem";
+		private MainActivity m_Launcher;
+		private DragLayer m_DragLayer;
+		private AnimatorSet m_AnimatorSetHintRock;
+		/** 克隆的对象传向DragLayer中去绘制，hint*/
+		private SwapItemObject m_SwapObjectDraw = new SwapItemObject();
+		/** 克隆的对象传向DragLayer中去绘制，follow back */
+		private SwapItemObject m_SwapObjectBackDraw = new SwapItemObject();
+		
+		public AnimatorSwapItem(MainActivity launcher, DragLayer dragLayer) {
+			this.m_Launcher = launcher;
+			this.m_DragLayer = dragLayer;
+			
+		}
+		
+		private void initAnim(final SwapItemObject swapItemObjectDrag, final SwapItemObject swapItemObjectHint) {
+//			Utils.log(TAG, "initAnim");
+//			Utils.log(TAG, "swapDragInfo: %s", swapItemObjectDrag.toString() );
+//			Utils.log(TAG, "swapItemHint: %s", swapItemObjectHint.toString() );
+			
+			m_AnimatorSetHintRock = new AnimatorSet();
+			final AnimatorSet animatorSetHintRock = m_AnimatorSetHintRock;
+			final SwapItemObject swapObjectDraw = m_SwapObjectDraw;
+			
+			ValueAnimator anim1 = new ValueAnimator();
+			anim1.setDuration(ANIM_MOVE_HINT_DURATION);
+			anim1.setFloatValues(0.0f, 1.0f);
+			anim1.addListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationCancel(Animator animation) {
+					super.onAnimationCancel(animation);
+					swapObjectDraw.resumeValue(swapObjectDraw);
+					swapItemObjectHint.resumeValue(swapObjectDraw);
+				}
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					super.onAnimationEnd(animation);
+					swapObjectDraw.resumeValue(swapObjectDraw);
+					swapItemObjectHint.resumeValue(swapObjectDraw);
+				}
+				@Override
+				public void onAnimationStart(Animator animation) {
+					super.onAnimationStart(animation);
+					swapObjectDraw.setItemViewVisiblity(View.INVISIBLE);
+				}
+			});
+			anim1.addUpdateListener(new AnimatorUpdateListener() {
+				
+				@Override
+				public void onAnimationUpdate(ValueAnimator animation) {
+					final float fProcess = (Float) animation.getAnimatedValue();
+					final int iTotalX = swapItemObjectDrag.oriX - swapItemObjectHint.oriX;
+					final int iTotalY = swapItemObjectDrag.oriY - swapItemObjectHint.oriY;
+					final int iCurX = (int) (fProcess*iTotalX + swapItemObjectHint.oriX);
+					final int iCurY = (int) (fProcess*iTotalY + swapItemObjectHint.oriY);
+					
+					swapItemObjectHint.curX = iCurX;
+					swapItemObjectHint.curY = iCurY;
+					
+					swapObjectDraw.copy(swapItemObjectHint);
+					m_DragLayer.updateswapItemShortCutToShortCur(swapObjectDraw);
+				}
+			});
+			
+			ValueAnimator anim2 = new ValueAnimator();
+			anim2.setDuration(ANIM_ROCK_HINT_DURATION);
+			anim2.setFloatValues(0.0f, 1.0f);
+			anim2.setRepeatCount(ValueAnimator.INFINITE);
+			anim2.setRepeatMode(ValueAnimator.REVERSE);
+			anim2.addListener(new AnimatorListenerAdapter() {
+			});
+			anim2.addListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationCancel(Animator animation) {
+					super.onAnimationCancel(animation);
+					swapItemObjectHint.resumeValue(swapItemObjectHint);
+				}
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					super.onAnimationEnd(animation);
+					swapItemObjectHint.resumeValue(swapItemObjectHint);
+				}
+			});
+			anim2.addUpdateListener(new AnimatorUpdateListener() {
+				
+				@Override
+				public void onAnimationUpdate(ValueAnimator animation) {
+					final float fProcess = (Float) animation.getAnimatedValue();
+					final int iTotalX = ANIM_ROCK_OFFSET_X;
+					final int iTotalY = ANIM_ROCK_OFFSET_Y;
+					final int iCurX = (int) (fProcess*iTotalX + swapObjectDraw.finallyX);
+					final int iCurY = (int) (fProcess*iTotalY + swapObjectDraw.finallyY);
+					
+					swapObjectDraw.curX = iCurX;
+					swapObjectDraw.curY = iCurY;
+					swapItemObjectHint.curX = iCurX;
+					swapItemObjectHint.curY = iCurY;
+					
+					m_DragLayer.updateswapItemShortCutToShortCur(swapObjectDraw);
+				}
+			});
+			
+			
+			animatorSetHintRock.play(anim1);
+			animatorSetHintRock.play(anim2).after(anim1);
+		}
+		
+		private void startAnimHint() {
+			Utils.log(TAG, "startAnimHint");
+			m_AnimatorSetHintRock.start();
+		}
+		
+		/**
+		 * 启动移动和摇呀摇动画
+		 * @param swapItemObjectDrag
+		 * @param swapItemObjectHint
+		 */
+		public void startHintAnim(final SwapItemObject swapItemObjectDrag, final SwapItemObject swapItemObjectHint) {
+			Utils.log(TAG, "startHintAnim");
+			
+			initAnim(swapItemObjectDrag, swapItemObjectHint);
+			startAnimHint();
+		}
+		
+		/**
+		 * 取消摇呀摇动画
+		 */
+		public void cancelHintAnim() {
+//			Utils.toastAndlogcat(m_Launcher, TAG, "cancelHintAnim");
+			
+			final AnimatorSet set = m_AnimatorSetHintRock;
+			if (set != null) {
+				if (set.isRunning() ) {
+					set.cancel();
+				}
+			}
+		}
+		
+		public boolean isHintAnimEnd() {
+			if (m_AnimatorSetHintRock!=null && m_AnimatorSetHintRock.isStarted()) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		
+		private ValueAnimator m_ValueAnimatorFollowBack;
+		/**
+		 * 回滚动画
+		 * @param swapObjectFollow
+		 * @param swapObjectHint
+		 */
+		public void startFollowBack(final SwapItemObject swapObjectFollow, final SwapItemObject swapObjectHint) {
+			Utils.log(TAG, "startFollowBack");			
+			
+			final SwapItemObject swapObject = m_SwapObjectBackDraw;
+			
+			Utils.log(TAG, swapObjectFollow.toString() );
+			
+			ValueAnimator anim1 = m_ValueAnimatorFollowBack;
+			
+			if (anim1!=null && anim1.isStarted() ) {
+				return;
+			}
+			
+			m_ValueAnimatorFollowBack = new ValueAnimator();
+			anim1= m_ValueAnimatorFollowBack;
+			
+			anim1.setDuration(ANIM_FOLLOW_BACK_DURATION);
+			anim1.setFloatValues(0.0f, 1.0f);
+			anim1.addListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					super.onAnimationEnd(animation);
+					Utils.log(TAG, "End follow back anim end onCallBack");
+//					swapObjectFollow.setItemViewVisiblity(View.VISIBLE);
+//					swapObjectFollow.clearRes();
+					//TODO 啥时候clearRes
+					if (swapObjectHint != null) {
+//						swapObjectFollow.copy(swapObjectHint);
+//						swapObjectFollow = swapObjectHint;
+						m_DragLayer.updateSwapFollowBackFromAnim();
+					} else {
+						m_DragLayer.clearSwapFollowBack();
+					}
+				}
+				
+				@Override
+				public void onAnimationCancel(Animator animation) {
+					super.onAnimationCancel(animation);
+					swapObjectFollow.resumeValue(swapObjectFollow);
+				}
+				
+			});
+			anim1.addUpdateListener(new AnimatorUpdateListener() {
+				
+				@Override
+				public void onAnimationUpdate(ValueAnimator animation) {
+					final float fProcess = (Float) animation.getAnimatedValue();
+					final int iTotalX = swapObjectFollow.oriX - swapObjectFollow.finallyX;
+					final int iTotalY = swapObjectFollow.oriY - swapObjectFollow.finallyY;
+					final int iCurX = (int) (fProcess*iTotalX + swapObjectFollow.finallyX);
+					final int iCurY = (int) (fProcess*iTotalY + swapObjectFollow.finallyY);
+					
+					swapObjectFollow.curX = iCurX;
+					swapObjectFollow.curY = iCurY;
+					
+					swapObject.copy(swapObjectFollow);
+					m_DragLayer.updateswapItemShortCutToShortCurFollowBackDispatchDraw(swapObject);
+				}
+			});
+			
+			
+			anim1.start();
+		}
+		
+		
+	}
 	
 	
 	
 	static class AnimatorDragFollow1 {
 		
 		private static final long ANIM_DRAG_FOLLOW_DURATION = 150;
+//		private static final long ANIM_DRAG_FOLLOW_DURATION = 5000;
+		
 
 		protected static final String TAG = "Animator2";
 

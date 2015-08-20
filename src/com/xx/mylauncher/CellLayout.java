@@ -8,6 +8,7 @@ import java.util.Queue;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -60,6 +61,9 @@ public class CellLayout extends ViewGroup {
 	
 	/** [行数VSpan][列数HSpan] */
 	private boolean m_bCellsOcupied[][];
+	
+	/** 索引所有的item view a[cellX][cellY] */
+	private View[][] m_CellLayoutChildren;
 	
 	private Rect m_RectTemp = new Rect();
 	
@@ -158,6 +162,8 @@ public class CellLayout extends ViewGroup {
 		
 		m_bCellsOcupied = new boolean[iCellVCount][iCellHCount];
 		
+		m_CellLayoutChildren = new View[iCellHCount][iCellVCount];
+		
 		for (int i=0; i<iCellVCount; i++) {
 			for (int j=0; j<iCellHCount; j++) {
 				m_bCellsOcupied[i][j] = false;
@@ -228,6 +234,16 @@ public class CellLayout extends ViewGroup {
 			int cellHSpan = lp.cellHSpan;
 			int cellVSpan = lp.cellVSpan;
 			
+			/*
+			 * 添加索引
+			 */
+//			m_CellLayoutChildren[cellX][cellY] = child;
+			for (int ti=cellX; ti<=cellX+cellHSpan-1; ti++) {
+				for (int tj=cellY; tj<=cellY+cellVSpan-1; tj++) {
+					m_CellLayoutChildren[ti][tj] = child;
+				}
+			}
+			
 //			Utils.log(TAG, "cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d", cellX, cellY, cellHSpan, cellVSpan);
 			for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
 				for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
@@ -236,6 +252,7 @@ public class CellLayout extends ViewGroup {
 			}
 		}
 		
+//		Utils.debugCellLayoutChildren(TAG, m_CellLayoutChildren);
 	}
 	
 	
@@ -384,6 +401,10 @@ public class CellLayout extends ViewGroup {
 		}
 	}
 	
+	public void clearFlagsOcupid(final CellInfo cellInfo) {
+		clearFlagsOcupied(cellInfo.getCellX(), cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan());
+	}
+	
 	public void flagOcupied(int cellX, int cellY, int cellHSpan, int cellVSpan) {
 		for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
 			for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
@@ -509,7 +530,7 @@ public class CellLayout extends ViewGroup {
 	 * @param context
 	 * @param subStatus	是否减去状态栏的高度，一般设为true，减去其高度
 	 */
-	private void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
+	public void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
 		if (view == null) {
 			return;
 		}
@@ -626,11 +647,17 @@ public class CellLayout extends ViewGroup {
 			int yOffset, DragView dragView, Object dragInfo) {
 		Utils.log(TAG, "onDragEnter");
 		
+		initDragObject(dragInfo);
+		initFollowDragObject(dragView);
+	}
+
+	private void initDragObject(Object dragInfo) {
 		m_DragObjectInfo = new DragObjectInfo();
 		final DragObjectInfo dragObjectInfo = m_DragObjectInfo;
+		final CellInfo cellInfo = (CellInfo) dragInfo;
 		dragObjectInfo.reset();
-		
-		initFollowDragObject(dragView);
+		dragObjectInfo.preCellX = cellInfo.getCellX();
+		dragObjectInfo.preCellY = cellInfo.getCellY();
 	}
 
 	private void initFollowDragObject(DragView dragView) {
@@ -692,8 +719,14 @@ public class CellLayout extends ViewGroup {
 			dragObjectInfo.offerDragObjectInQueue((DragObjectInfo) dragObjectInfo.clone() );
 		}
 		
+		//debug flagOcupidList
+		/*if (!bIsCanDrop) {
+			Utils.log(TAG+"flagList", dragObjectInfo.toString() );
+		}*/
+		
 //		m_Launcher.getDragLayer().updateDragPreEffect(dragObjectInfo);
 		m_Launcher.getDragLayer().updateDragFollowDrag(dragObjectInfo);
+		m_Launcher.getDragLayer().updateSwapItemEffect(dragObjectInfo);
 	}
 	
 	/**
@@ -735,8 +768,8 @@ public class CellLayout extends ViewGroup {
 				for (int j=iCellXRefDropTarget; j<iCellXRefDropTarget+iNHSpan; j++ ) {
 					if (bArrayOcupid[i][j]) {
 						int[] bArrOcupyItem = new int[2];
-						bArrOcupyItem[0] = i;
-						bArrOcupyItem[1] = j;
+						bArrOcupyItem[0] = j;
+						bArrOcupyItem[1] = i;
 						dragObjectInfo.flagOcupiedList.add(bArrOcupyItem);
 						
 					}
@@ -1089,6 +1122,14 @@ public class CellLayout extends ViewGroup {
 		return m_iSpaceVertical;
 	}
 	
+	/**
+	 * 返回子view的索引
+	 * @return
+	 */
+	public View[][] getCellLayoutChildren() {
+		return m_CellLayoutChildren;
+	}
+	
 	private void debugBooleanArray() {
 		final boolean[][] bArray = m_bCellsOcupied;
 		final int iH = m_iCellHCount;
@@ -1105,6 +1146,66 @@ public class CellLayout extends ViewGroup {
 		
 		Utils.log(TAG+"ocupid", sb.toString());
 	}
+	
+	
+	/**
+	 * 交换时的对象实体
+	 * @author baoxing
+	 *
+	 */
+	static class SwapItemObject {
+		public int oriX;
+		public int oriY;
+		public int curX;
+		public int curY;
+		public int finallyX;
+		public int finallyY;
+		public View itemView;
+		public Bitmap bitmapItemView;
+		
+		public volatile boolean isInvalid = false;
+		
+		public void copy(SwapItemObject object) {
+			this.oriX = object.oriX;
+			this.oriY = object.oriY;
+			this.curX = object.curX;
+			this.curY = object.curY;
+			this.finallyX = object.finallyX;
+			this.finallyY = object.finallyY;
+			this.itemView = object.itemView;
+			this.bitmapItemView = object.bitmapItemView;
+		}
+		public void resumeValue(SwapItemObject object) {
+			
+			this.finallyX = object.curX;
+			this.finallyY = object.curY;
+		}
+		
+		public void setItemViewVisiblity(int visibility) {
+			if (itemView != null) {
+				itemView.setVisibility(visibility);
+			}
+		}
+		
+		public void clearRes() {
+			if (bitmapItemView != null) {
+				bitmapItemView.recycle();
+				bitmapItemView = null;
+			}
+		}
+		@Override
+		public String toString() {
+			return "SwapItemObject [oriX=" + oriX + ", oriY=" + oriY
+					+ ", curX=" + curX + ", curY=" + curY + ", finallyX="
+					+ finallyX + ", finallyY=" + finallyY + ", itemView="
+					+ itemView + ", bitmapItemView=" + bitmapItemView
+					+ ", isInvalid=" + isInvalid + "]";
+		}
+		
+		
+	}
+	
+	
 	
 	/**
 	 * 当释放拖动的View时，保存的一些绘制信息
@@ -1305,6 +1406,17 @@ public class CellLayout extends ViewGroup {
 			
 		}
 		
+		/**
+		 * 判断是否有移动到另一个格子，用pressCellX和pressCellY来判断，用于swap item 回退
+		 * {@link #equalTheSameCell(DragObjectInfo)} 是用来设计跟随的，不适用
+		 * @param object
+		 * @return	true：移动到另一格子
+		 */
+		public boolean adjustMoveAnotherCell(final DragObjectInfo object) {
+			boolean r =  (this.cellXPress==object.cellXPress) && (this.cellYPress==object.cellYPress);
+			
+			return !r;
+		}
 		
 		@Override
 		protected Object clone() {

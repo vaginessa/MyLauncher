@@ -1,5 +1,8 @@
 package com.xx.mylauncher;
 
+import java.security.acl.LastOwnerException;
+import java.util.List;
+
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.animation.ValueAnimator;
@@ -16,7 +19,10 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.xx.mylauncher.AnimatorFactory.AnimatorDragFollow1;
+import com.xx.mylauncher.AnimatorFactory.AnimatorSwapItem;
 import com.xx.mylauncher.CellLayout.DragObjectInfo;
+import com.xx.mylauncher.CellLayout.SwapItemObject;
+import com.xx.mylauncher.dao.CellInfoEntity;
 
 /**
  * 拖动层，绘制icon的拖动效果及拖动时的一些辅助效果
@@ -78,6 +84,9 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 //		updateDragInfoAssist(canvas);
 		
 		updateDragFollowAnimDispatchDraw(canvas);
+		
+		updateswapItemShortCutToShortCurDispatchDraw(canvas);
+		updateswapItemShortCutToShortCurBackDispatchDraw(canvas);
 		
 		/*
 		 * DragView滑回指定位置
@@ -213,6 +222,7 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 	
 	/** 移动的时间 */
 	private static final long DRAGVIEW_SCROLL_TIME = 500;
+//	private static final long DRAGVIEW_SCROLL_TIME = 3000;
 	
 	/** 用来表示DragView滑动效果的相关信息 */
 	private CellLayout.DropObjectInfo m_DropObjectInfo;
@@ -286,6 +296,385 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		
 	}
 	
+	
+	/** 最近一次的DragObjectInfo */
+	private DragObjectInfo m_DragObjectInfoLast;
+	private SwapItemObject m_SwapItemObjectHintView;
+	private SwapItemObject m_SwapItemObjectLast;
+	private SwapItemObject m_SwapItemObjectDrag;
+	private AnimatorSwapItem m_AnimatorSwapItem;
+	private SwapItemAnimRunnable m_AnimRunnable;
+	
+	/**
+	 * 更新item view 交换效果，从CellLayout中调用
+	 */
+	public void updateSwapItemEffect(final DragObjectInfo dragObject) {
+		int iFlagOcupidType = calcFlagOcupidType(dragObject.flagOcupiedList);
+		CellInfo.CellType dragType = ((CellInfo)dragObject.itemView.getTag()).getType();
+		
+		boolean bUpdate = (m_DragObjectInfoLast==null) || (m_DragObjectInfoLast.adjustMoveAnotherCell(dragObject) );
+		
+/*		
+		if (m_SwapItemObjectLast!=null) {
+			Utils.log(TAG+"swap", "now:cellXPress=%d, cellYPress=%d", dragObject.cellXPress, dragObject.cellYPress);
+			Utils.log(TAG+"swap", "last:cellXPress=%d, cellYPress=%d", m_DragObjectInfoLast.cellXPress, m_DragObjectInfoLast.cellYPress);
+			Utils.log(TAG+"swap", "%b", m_DragObjectInfoLast.adjustMoveAnotherCell(dragObject) );
+		}
+		*/
+		if (bUpdate) {
+			m_DragObjectInfoLast = (DragObjectInfo) dragObject.clone();
+		}
+		
+		
+		if (bUpdate) {
+			Utils.log(TAG+"swap", "here..");
+			if (dragType==CellInfo.CellType.SHORT_CUT) {
+				if (m_AnimRunnable != null) {
+					removeCallbacks(m_AnimRunnable);
+				}
+				int iDelayedTime = 200;
+				m_AnimRunnable = new SwapItemAnimRunnable(iFlagOcupidType, dragObject, this);
+				postDelayed(m_AnimRunnable, iDelayedTime);
+				
+			} else {
+				/*
+				 * 暂时不处理
+				 */
+				//TODO
+			}
+			
+			
+		}	//end if update
+		
+	}
+	
+	public void swapItemOnComplete(DragSource source, boolean success) {
+		//TODO
+		final AnimatorSwapItem animator = m_AnimatorSwapItem;
+		final SwapItemObject lastObject = m_SwapItemObjectLast;
+		final SwapItemObject hintObject = m_SwapItemObjectHintView;
+		final LauncherDBManager dbManager = m_DragController.getLauncher().getLauncherDBManager();
+		final SwapItemObject dragSwapObject = m_SwapItemObjectDrag;
+		final DragObjectInfo dragObject = m_DragObjectInfo;
+		final HotSeat hotSeat = m_DragController.getLauncher().getHotSeat();
+		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
+		
+		if (source instanceof HotSeat) {
+			if (success) {
+				/*
+				 * 1. 取消hint anim
+				 * 2. 修改last item view,到HotSeat
+				 * 3. 加入数据库
+				 */
+				Utils.log(TAG+"swap", "source=HotSeat, true, success=%b", success);
+				
+				if (lastObject != null) {
+					Utils.log(TAG+"swap", "lastObject not null");
+					final CellInfo lastCellInfo = (CellInfo) lastObject.itemView.getTag();
+					final CellInfo dragCellInfo = (CellInfo) dragSwapObject.itemView.getTag();	
+					final CellLayout.LayoutParams lp = (com.xx.mylauncher.CellLayout.LayoutParams) lastObject.itemView.getLayoutParams();
+					
+					lastCellInfo.setLocation(CellInfo.CellLocation.HOTSEAT);
+					lastCellInfo.setCellX(dragCellInfo.getCellX());
+					lastCellInfo.setCellY(dragCellInfo.getCellY());
+					lastCellInfo.setHotSeatCellX(dragCellInfo.getHotSeatCellX());
+					lastCellInfo.setHotSeatCellY(dragCellInfo.getHotSeatCellY());
+					
+					lastObject.setItemViewVisiblity(View.VISIBLE);
+					hotSeat.removeView(dragSwapObject.itemView);
+					curCellLayout.removeView(lastObject.itemView);
+					((ShortCutView2)lastObject.itemView).setLabelVisibility(View.GONE);
+					hotSeat.addView(lastObject.itemView);
+					hotSeat.flagOcuped(lastCellInfo);
+					hotSeat.requestLayout();
+					
+					dbManager.updateDragInfo(lastCellInfo);
+				}
+				
+				if (animator != null) {
+					animator.cancelHintAnim();
+					
+					m_SwapItemObjectLast = null;
+				}
+				
+				
+			} else {
+				/*
+				 * 1. 取消hint anim 
+				 * 2. 回退last swap item
+				 */
+				Utils.log(TAG+"swap", "source=HotSeat, false, success=%b", success);
+				
+			}
+			
+		} else if (source instanceof Workspace) {
+			if (success) {
+				/*
+				 * 1. 取消Hint动画-last swap item
+				 * 2. last swap item 的 item view修改属性
+				 * 3. 加入数据库
+				 * 4. requestLayout
+				 */
+				Utils.log(TAG+"swap", "source=Workspace, true, success=%b", success);
+				
+				if (lastObject != null) {
+					Utils.log(TAG+"swap", "lastObject not null");
+					final CellInfo lastCellInfo = (CellInfo) lastObject.itemView.getTag();							
+					final CellLayout.LayoutParams lp = (com.xx.mylauncher.CellLayout.LayoutParams) lastObject.itemView.getLayoutParams();
+					
+					lastCellInfo.setCellX(dragObject.preCellX);
+					lastCellInfo.setCellY(dragObject.preCellY);
+					
+					lp.cellX = dragObject.preCellX;
+					lp.cellY = dragObject.preCellY;
+					lastObject.itemView.setLayoutParams(lp);
+					lastObject.setItemViewVisiblity(View.VISIBLE);
+					curCellLayout.flagOcuped(lastCellInfo);
+					curCellLayout.requestLayout();
+
+					dbManager.updateDragInfo(lastCellInfo);
+				}
+				
+				if (animator != null) {
+					animator.cancelHintAnim();
+					m_SwapItemObjectLast = null;
+				}
+				
+			} else {
+				/*
+				 * 1. 取消hint anim 
+				 * 2. 回退 last swap item 
+				 */
+				Utils.log(TAG+"swap", "source=Workspace, false, success=%b", success);
+				
+			}
+		}
+		
+	}
+	
+
+	/**
+	 * 回退
+	 * @param dragObject
+	 */
+	private void followBackSwapItemObject(DragObjectInfo dragObject) {
+		Utils.log(TAG+"swap", "followBackSwapItemObject");
+		final SwapItemObject followBackSwapObject = m_SwapItemObjectLast;
+		final AnimatorSwapItem animator = m_AnimatorSwapItem;
+		final SwapItemObject swapObjectHint = null;
+		
+		if (followBackSwapObject != null) {
+			animator.cancelHintAnim();
+			animator.startFollowBack(followBackSwapObject, swapObjectHint);
+		}
+		
+		
+	}
+	
+	public void clearSwapFollowBack() {
+		Utils.log(TAG+"swap", "clearSwapFollowBack");
+		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
+		final SwapItemObject followBackSwapObject = m_SwapItemObjectLast;
+		
+		if (followBackSwapObject != null) {
+			/*
+			 * 为空的情况是，当回退还没有回来时，多于一次的又到回退的原位置
+			 */
+			curCellLayout.flagOcuped((CellInfo) followBackSwapObject.itemView.getTag());
+			followBackSwapObject.setItemViewVisiblity(View.VISIBLE);
+			m_SwapItemObjectLast = null;
+		}
+	}
+	
+	
+	/**
+	 * 更新回退结束，从AnimatorFactory中调用
+	 */
+	public void updateSwapFollowBackFromAnim() {
+		Utils.log(TAG+"swap", "updateSwapFollowBackFromAnim");
+		
+		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
+		final SwapItemObject swapItemObjectLast = m_SwapItemObjectLast;
+		
+		
+		if (swapItemObjectLast == null) {
+			/*
+			 * 只是拆墙补墙而已
+			 */
+			return ;
+		}
+		
+		Utils.log(TAG+"swap", swapItemObjectLast.toString() );
+		
+		curCellLayout.flagOcuped((CellInfo) swapItemObjectLast.itemView.getTag());
+		swapItemObjectLast.setItemViewVisiblity(View.VISIBLE);
+		m_SwapItemObjectLast = m_SwapItemObjectHintView;
+			
+	}
+
+	private SwapItemObject m_SwapObjectDrawHint;
+	private SwapItemObject m_SwapObjectDrawBack;
+	/**
+	 * 从AnimatorFactory中调用Hint
+	 * @param drawHintObject
+	 */
+	public void updateswapItemShortCutToShortCur(final SwapItemObject drawHintObject) {
+		drawHintObject.isInvalid = true;
+		
+		m_SwapObjectDrawHint = drawHintObject;
+		invalidate();
+	}
+	
+	/**
+	 * 更新回退，从AnimatorFactory中调用
+	 * @param followBack
+	 */
+	public void updateswapItemShortCutToShortCurFollowBackDispatchDraw(final SwapItemObject followBack) {
+		followBack.isInvalid = true;
+		
+		m_SwapObjectDrawBack = followBack;
+		invalidate();
+	}
+	
+	private void updateswapItemShortCutToShortCurDispatchDraw(Canvas canvas) {
+		final SwapItemObject object = m_SwapObjectDrawHint;
+		if (object != null) {
+			if (object.isInvalid) {
+				object.isInvalid = false;
+				canvas.drawBitmap(object.bitmapItemView, object.curX, object.curY, null);
+			}
+		}
+		
+	}
+	
+	private void updateswapItemShortCutToShortCurBackDispatchDraw(Canvas canvas) {
+		final SwapItemObject object = m_SwapObjectDrawBack;
+		if (object != null) {
+			if (object.isInvalid) {
+				object.isInvalid = false;
+				canvas.drawBitmap(object.bitmapItemView, object.curX, object.curY, null);
+			}
+		}
+	}
+	
+	private void swapItemShortCutToShortCur(DragObjectInfo dragObject) {
+		Utils.log(TAG+"swap", "swapItemShortCutToShortCur");
+		
+		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
+		final View[][] children = curCellLayout.getCellLayoutChildren();
+		final AnimatorSwapItem animatorSwapItem = m_AnimatorSwapItem;
+		final int[] item = dragObject.flagOcupiedList.get(0);
+		final int[] iArrCoor = new int[2];
+		final View hintView = children[item[0]][item[1]];
+		SwapItemObject swapItemObjectLast = m_SwapItemObjectLast;
+		
+		m_SwapItemObjectDrag = new SwapItemObject();
+		m_SwapItemObjectHintView = new SwapItemObject();
+		
+		final SwapItemObject swapItemDrag = m_SwapItemObjectDrag;
+		SwapItemObject swapItemHintView = m_SwapItemObjectHintView;
+		
+		curCellLayout.adjustToDragLayer(iArrCoor, dragObject.itemView, getContext(), true);
+		swapItemDrag.oriX = iArrCoor[0];
+		swapItemDrag.oriY = iArrCoor[1];
+		swapItemDrag.itemView = dragObject.itemView;
+		swapItemDrag.bitmapItemView = Utils.getViewBitmap(dragObject.itemView);
+		
+		if (hintView == null) {
+			/*
+			 * 从条件来看，是不会发生这种情况的
+			 */
+			Utils.logE(TAG+"swap", "程序有错！！重新检查");
+		} else {
+			curCellLayout.adjustToDragLayer(iArrCoor, hintView, getContext(), true);
+			swapItemHintView.oriX = iArrCoor[0];
+			swapItemHintView.oriY = iArrCoor[1];
+			swapItemHintView.itemView = hintView;
+			swapItemHintView.bitmapItemView = Utils.getViewBitmap(hintView);
+		}
+		
+		
+		if (m_SwapItemObjectLast == null) {
+			m_SwapItemObjectLast = new SwapItemObject();
+//			m_SwapItemObjectLast.copy(swapItemHintView);
+			m_SwapItemObjectLast = swapItemHintView;
+			
+			swapItemObjectLast = m_SwapItemObjectLast;
+		} else {
+			animatorSwapItem.cancelHintAnim();
+			animatorSwapItem.startFollowBack(swapItemObjectLast, swapItemHintView);
+			
+		}
+		
+		curCellLayout.clearFlagsOcupid((CellInfo) swapItemHintView.itemView.getTag());
+		animatorSwapItem.startHintAnim(swapItemDrag, swapItemHintView);
+	}
+	
+
+	static class SwapItemAnimRunnable implements Runnable {
+		private int m_iOcupid;
+		private DragObjectInfo m_DragObject;
+		private DragLayer m_DragLayer;
+		
+		public SwapItemAnimRunnable(int ocupid, DragObjectInfo dragObject, DragLayer dragLayer) {
+			this.m_iOcupid = ocupid;
+			this.m_DragObject = dragObject;
+			this.m_DragLayer = dragLayer;
+		}
+		
+		@Override
+		public void run() {
+			/* 拖动的是shortcut，被占用的是一个shortcut，最简单的情况 */
+			if (m_iOcupid==1) {
+				m_DragLayer.swapItemShortCutToShortCur(m_DragObject);
+			} else if (m_iOcupid == -1 || m_iOcupid==3) {
+				/* 列表为空，回退 */
+				m_DragLayer.followBackSwapItemObject(m_DragObject);
+			}
+		}
+	}
+	
+	
+	/**
+	 * 计算被占用的位置的item view 的类型
+	 * @param flagOcupiedList
+	 * @return	-1：列表为空；-2：同时有shortcut和widget；-3：widget的数量大于1；1：一个shortcut；2：大于一个shortcut；3：一个widget
+	 */
+	private int calcFlagOcupidType(List<int[]> flagOcupiedList) {
+		final View[][] childrenView = m_DragController.getLauncher().getWorkspace().getCurCellLayout().getCellLayoutChildren();
+		int iResult;
+		int iShortCutCount = 0;
+		int iWidgetCount = 0;
+		CellInfo cellInfo;
+		for (int[] item : flagOcupiedList) {
+			cellInfo = (CellInfo) childrenView[item[0]][item[1]].getTag();
+			if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
+				iShortCutCount++;
+			} else if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
+				iWidgetCount++;
+			}
+			
+		}
+		if (iShortCutCount==0 && iWidgetCount==0) {
+			iResult = -1;
+		} else if (iShortCutCount>0 && iWidgetCount>0) {
+			iResult = -2;
+		} else if (iShortCutCount==0 && iWidgetCount>1) {
+			iResult = -3;
+		} else if (iShortCutCount==1 && iWidgetCount==0) {
+			iResult = 1;
+		} else if (iShortCutCount>1 && iWidgetCount==0) {
+			iResult = 2;
+		} else if (iShortCutCount==0 && iWidgetCount==1) {
+			iResult = 3;
+		} else {
+			iResult =  -1;
+			Utils.logE(TAG, "程序有错！！重新分析");
+		}
+		
+		return iResult;
+	}
+
 	/**
 	 * 更新在拖动时的辅助信息，比如拖动到哪的可以预绘制的边框，不可以放置时的红色蒙板提醒
 	 * @param info
@@ -463,8 +852,8 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 
 	@Override
 	public void onDragStart(DragSource source, Object info, int dragAction) {
-		// TODO Auto-generated method stub
-		
+		//TODO
+		m_AnimatorSwapItem = new AnimatorSwapItem(m_DragController.getLauncher(), this);
 	}
 
 	@Override

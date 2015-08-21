@@ -145,7 +145,13 @@ public class AnimatorFactory {
 			}
 			
 			m_ListValueAnimatorFlag.set(iPositon, Boolean.TRUE);
-			return m_ListValueAnimator.get(iPositon);
+			ValueAnimator valueAnimator = m_ListValueAnimator.get(iPositon);
+			valueAnimator.removeAllListeners();
+			valueAnimator.removeAllUpdateListeners();
+			
+			//TODO 这里的线程池实现有问题
+			return valueAnimator;
+//			return new ValueAnimator();
 		}
 		
 		
@@ -160,7 +166,19 @@ public class AnimatorFactory {
 			}					
 			
 			m_ListAnimatorSetFlag.set(iPositon, Boolean.TRUE);
-			return m_ListAnimatorSet.get(iPositon);
+			AnimatorSet set =  m_ListAnimatorSet.get(iPositon);
+			ArrayList<Animator> childAnimations = set.getChildAnimations();
+			set.removeAllListeners();
+			
+			for (Animator item : childAnimations) {
+				item.removeAllListeners();
+				if (item instanceof ValueAnimator) {
+					((ValueAnimator)item).removeAllUpdateListeners();
+				}
+			}
+			
+			return set;
+//			return new AnimatorSet();
 		}
 		
 		
@@ -170,6 +188,7 @@ public class AnimatorFactory {
 			int iPostion = m_ListAnimatorSet.indexOf(set);
 			if (iPostion != -1) {
 				m_ListAnimatorSetFlag.set(iPostion, Boolean.FALSE);
+				Utils.log(TAG, "relase success position=%d", iPostion);
 			}
 			
 		}
@@ -180,6 +199,7 @@ public class AnimatorFactory {
 			int iPositon = m_ListValueAnimator.indexOf(valueAnimator);
 			if (iPositon != -1) {
 				m_ListValueAnimatorFlag.set(iPositon, Boolean.FALSE);
+				Utils.log(TAG, "realese ValueAnimator succeed");				
 			}
 		}
 		
@@ -192,7 +212,7 @@ public class AnimatorFactory {
 	 *
 	 */
 	static class AnimatorSwapItem {
-		private static final long L_AINM_HINT_MOVE_DURATION = 2000;
+		private static final long L_AINM_HINT_MOVE_DURATION = 400;
 
 		private static final long L_ANIM_HINT_ROCK_DURATION = 300;
 
@@ -200,7 +220,7 @@ public class AnimatorFactory {
 
 		protected static final int I_ANIM_HINT_ROCK_OFFSET_Y = -15;
 
-		private static final long L_ANIM_FALLBACK_DURATION = 2000;
+		private static final long L_ANIM_FALLBACK_DURATION = 300;
 
 		private static final String TAG = "AnimatorSwapItem";
 
@@ -245,9 +265,13 @@ public class AnimatorFactory {
 					Animator animator = findObject.animator;
 					animator.cancel();
 					removeObjectInFallBackList(findObject);
-					hintObject.oriX = findObject.curX;
-					hintObject.oriY = findObject.curY;
-					
+//					hintObject.oriX = findObject.curX;
+//					hintObject.oriY = findObject.curY;
+					hintObject.finallyX = findObject.curX;
+					hintObject.finallyY = findObject.curY;
+				} else {
+					hintObject.finallyX = hintObject.oriX;
+					hintObject.finallyY = hintObject.oriY;
 				}
 				
 				AnimatorSet anim = initHintAnim(dragObject, hintObject);
@@ -299,6 +323,7 @@ public class AnimatorFactory {
 			
 			if (findObject != null) {
 				listHintObject.remove(findObject);
+				Utils.log(TAG, "remove success from listHintObjects");
 			}
 		}
 		
@@ -320,6 +345,7 @@ public class AnimatorFactory {
 				}
 			}
 			if (findObject != null) {
+				Utils.log(TAG, "delete item from listFallback");
 				listFallback.remove(findObject);
 			}
 			
@@ -332,6 +358,7 @@ public class AnimatorFactory {
 				}
 			}
 			if (findObject != null) {
+				Utils.log(TAG, "delete item from listFallbackOnDraw");
 				listFallbackOnDraw.remove(findObject);
 			}
 			
@@ -356,8 +383,29 @@ public class AnimatorFactory {
 
 			}
 			
-			Utils.log(TAG, "containsInListFallBack=%b", bContains);
+			Utils.log(TAG, "是否在listFallback中包含=%b", bContains);
 			return bContains;
+		}
+		
+		/**
+		 * 因为listfallback和listfallbackOndraw的元素不是相同的引用，但是listfallback的元素设置设置类animator,
+		 * 而listfallback中没有
+		 * @param listNewFallback
+		 */
+		private void mappingAnimInListBack(final List<SwapItemObject> listNewFallback) {
+			final List<SwapItemObject> listFallback = m_ListFallBackObject;
+			
+			for (SwapItemObject srcItem : listNewFallback) {
+				for (SwapItemObject dstItem : listFallback) {
+					if (srcItem.isTheSameObject(dstItem)) {
+						//TODO 这里好奇怪
+//						dstItem = (SwapItemObject) srcItem.clone();
+						dstItem.animator = srcItem.animator;
+//						dstItem = srcItem;
+					}
+				}
+			}
+			
 		}
 		
 		/**
@@ -382,22 +430,23 @@ public class AnimatorFactory {
 						Utils.log(TAG, "anim fall back start");
 						Utils.log(TAG, "debug:\n%s", item.toString());
 						m_Launcher.getWorkspace().getCurCellLayout().flagOcuped((CellInfo) item.itemView.getTag());
+//						item.setItemVisibility(View.VISIBLE);
 						listFallbackOnDraw.add(item);
 					}
 					@Override
 					public void onAnimationEnd(Animator animation) {
 						super.onAnimationEnd(animation);
+						Utils.log(TAG, "anim fall back end");
 						
 						item.finallyX = item.curX;
 						item.finallyY = item.curY;
+						item.setItemVisibility(View.VISIBLE);
 						animatorPool.relaseValueAnimator((ValueAnimator) item.animator);
 						removeObjectInFallBackList(item);
 					}
 					@Override
 					public void onAnimationCancel(Animator animation) {
 						super.onAnimationCancel(animation);
-						item.finallyX = item.curX;
-						item.finallyY = item.curY;
 					}
 				});
 				anim.addUpdateListener(new AnimatorUpdateListener() {
@@ -418,6 +467,8 @@ public class AnimatorFactory {
 					}
 				});
 			}
+			
+//			mappingAnimInListBack(listNewFallback);
 		}
 
 		/**
@@ -523,6 +574,7 @@ public class AnimatorFactory {
 					}
 					
 				}
+//				diffSection.add((SwapItemObject) item1.clone());
 				diffSection.add(item1);
 			}
 			
@@ -549,6 +601,7 @@ public class AnimatorFactory {
 					Utils.log(TAG, "animation start hintObject");
 					super.onAnimationStart(animation);
 					m_Launcher.getWorkspace().getCurCellLayout().clearFlagsOcupid((CellInfo) swapItemCloned.itemView.getTag());
+					swapItemCloned.setItemVisibility(View.INVISIBLE);
 					listHintObject.add(swapItemCloned);
 				}
 				@Override
@@ -563,8 +616,6 @@ public class AnimatorFactory {
 				@Override
 				public void onAnimationCancel(Animator animation) {
 					super.onAnimationCancel(animation);
-					swapItemCloned.finallyX = swapItemCloned.curX;
-					swapItemCloned.finallyY = swapItemCloned.curY;
 				}
 				
 			});
@@ -582,8 +633,6 @@ public class AnimatorFactory {
 				@Override
 				public void onAnimationCancel(Animator animation) {
 					super.onAnimationCancel(animation);
-					swapItemCloned.finallyX = swapItemCloned.curX;
-					swapItemCloned.finallyY = swapItemCloned.curY;
 				}
 			});
 			anim1.addUpdateListener(new AnimatorUpdateListener() {
@@ -591,10 +640,15 @@ public class AnimatorFactory {
 				@Override
 				public void onAnimationUpdate(ValueAnimator animation) {
 					final float fProcess = (Float) animation.getAnimatedValue();
-					final int iTotalX = dragObject.oriX - swapItemCloned.oriX;
-					final int iTotalY = dragObject.oriY - swapItemCloned.oriY;
-					final int iCurX = (int) (swapItemCloned.oriX + fProcess*iTotalX);
-					final int iCurY = (int) (swapItemCloned.oriY + fProcess*iTotalY);
+//					final int iTotalX = dragObject.oriX - swapItemCloned.oriX;
+//					final int iTotalY = dragObject.oriY - swapItemCloned.oriY;
+//					final int iCurX = (int) (swapItemCloned.oriX + fProcess*iTotalX);
+//					final int iCurY = (int) (swapItemCloned.oriY + fProcess*iTotalY);
+					final int iTotalX = dragObject.oriX - swapItemCloned.finallyX;
+					final int iTotalY = dragObject.oriY - swapItemCloned.finallyY;
+					final int iCurX = (int) (swapItemCloned.finallyX + fProcess*iTotalX);
+					final int iCurY = (int) (swapItemCloned.finallyY + fProcess*iTotalY);
+					
 					
 					swapItemCloned.curX = iCurX;
 					swapItemCloned.curY = iCurY;
@@ -683,6 +737,14 @@ public class AnimatorFactory {
 		public Animator animator;
 		
 		/**
+		 * 设置item的可见性
+		 * @param visibility
+		 */
+		public void setItemVisibility(int visibility) {
+			this.itemView.setVisibility(visibility);
+		}
+		
+		/**
 		 * 是否同一个对象，通过比较itemView
 		 * @param object
 		 * @return
@@ -701,6 +763,7 @@ public class AnimatorFactory {
 			try {
 				object = (SwapItemObject) super.clone();
 				object.bitmapItemView = Utils.getViewBitmap(this.itemView);
+				object.animator = null;
 			} catch (CloneNotSupportedException e) {
 				e.printStackTrace();
 			}

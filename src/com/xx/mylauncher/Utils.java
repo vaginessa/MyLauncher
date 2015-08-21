@@ -269,7 +269,27 @@ public class Utils {
 		return newList;
 	}
 	
+		
+		public static void debugCellLayoutChildren(String tag, View[][] children) {
+			Utils.log(tag, "-------------debug cellLayout children start---------------------");
+			CellInfo cellInfo;
+			View view;
+			for (int i=0; i<children.length; i++) {
+				for (int j=0; j<children[i].length; j++) {
+					view = children[i][j];
+					if (view == null) {
+						Utils.log(tag, "children[%d][%d]：null", i, j);
+					} else {
+						cellInfo = (CellInfo) view.getTag();
+						Utils.log(tag, "children[%d][%d]：cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d", 
+													i, j, cellInfo.getCellX(), cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan()  );
+					}
+				}
+				
+			}
 	
+			Utils.log(tag, "-------------debug cellLayout children end---------------------");
+		}
 	
 	
 	

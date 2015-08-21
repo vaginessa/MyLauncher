@@ -61,6 +61,9 @@ public class CellLayout extends ViewGroup {
 	/** [行数VSpan][列数HSpan] */
 	private boolean m_bCellsOcupied[][];
 	
+	/** 当前屏幕的所有child view的索引 array[cellX][cellY] */
+	private View[][] m_ViewChildren;
+	
 	private Rect m_RectTemp = new Rect();
 	
 	/**Launcher 引用 *///TODO要修改
@@ -156,6 +159,8 @@ public class CellLayout extends ViewGroup {
 		m_iCellHCount = iCellHCount = (iParentWidth - getPaddingLeft() - getPaddingRight() ) / (m_iCellSize + m_iSpaceHorizatation); 
 		m_iCellVCount = iCellVCount = (iParentHeight - getPaddingTop() - getPaddingBottom() ) / (m_iCellSize + m_iSpaceVertical);
 		
+		m_ViewChildren = new View[iCellHCount][iCellVCount];
+		
 		m_bCellsOcupied = new boolean[iCellVCount][iCellHCount];
 		
 		for (int i=0; i<iCellVCount; i++) {
@@ -228,6 +233,15 @@ public class CellLayout extends ViewGroup {
 			int cellHSpan = lp.cellHSpan;
 			int cellVSpan = lp.cellVSpan;
 			
+			/*
+			 * 添加 child view
+			 */
+			for (int ti=cellX; ti<=cellX+cellHSpan-1; ti++) {
+				for (int tj=cellY; tj<=cellY+cellVSpan-1; tj++) {
+					m_ViewChildren[ti][tj] = child;
+				}
+			}
+			
 //			Utils.log(TAG, "cellX=%d, cellY=%d, cellHSpan=%d, cellVSpan=%d", cellX, cellY, cellHSpan, cellVSpan);
 			for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
 				for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
@@ -236,6 +250,7 @@ public class CellLayout extends ViewGroup {
 			}
 		}
 		
+//		Utils.debugCellLayoutChildren(TAG+"children", m_ViewChildren);
 	}
 	
 	
@@ -384,6 +399,10 @@ public class CellLayout extends ViewGroup {
 		}
 	}
 	
+	public void clearFlagsOcupid(final CellInfo cellInfo) {
+		clearFlagsOcupied(cellInfo.getCellX(), cellInfo.getCellY(), cellInfo.getCellHSpan(), cellInfo.getCellVSpan());
+	}
+	
 	public void flagOcupied(int cellX, int cellY, int cellHSpan, int cellVSpan) {
 		for (int ti=cellY; ti<=cellY+cellVSpan-1; ti++) {
 			for (int tj=cellX; tj<=cellX+cellHSpan-1; tj++) {
@@ -509,7 +528,7 @@ public class CellLayout extends ViewGroup {
 	 * @param context
 	 * @param subStatus	是否减去状态栏的高度，一般设为true，减去其高度
 	 */
-	private void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
+	public void adjustToDragLayer(int[] coordnates, View view, Context context, boolean subStatus) {
 		if (view == null) {
 			return;
 		}
@@ -694,6 +713,7 @@ public class CellLayout extends ViewGroup {
 		
 //		m_Launcher.getDragLayer().updateDragPreEffect(dragObjectInfo);
 		m_Launcher.getDragLayer().updateDragFollowDrag(dragObjectInfo);
+		m_Launcher.getDragLayer().updateSwapItem(dragObjectInfo);
 	}
 	
 	/**
@@ -735,8 +755,8 @@ public class CellLayout extends ViewGroup {
 				for (int j=iCellXRefDropTarget; j<iCellXRefDropTarget+iNHSpan; j++ ) {
 					if (bArrayOcupid[i][j]) {
 						int[] bArrOcupyItem = new int[2];
-						bArrOcupyItem[0] = i;
-						bArrOcupyItem[1] = j;
+						bArrOcupyItem[0] = j;
+						bArrOcupyItem[1] = i;
 						dragObjectInfo.flagOcupiedList.add(bArrOcupyItem);
 						
 					}
@@ -1089,6 +1109,11 @@ public class CellLayout extends ViewGroup {
 		return m_iSpaceVertical;
 	}
 	
+	/** 返回所有的子view */
+	public View[][] getAllChildrenView() {
+		return m_ViewChildren;
+	}
+	
 	private void debugBooleanArray() {
 		final boolean[][] bArray = m_bCellsOcupied;
 		final int iH = m_iCellHCount;
@@ -1303,6 +1328,20 @@ public class CellLayout extends ViewGroup {
 			return (this.cellX==object.cellX) && (this.cellY==object.cellY)
 						&& (this.cellHSpan==object.cellHSpan) && (this.cellVSpan==object.cellVSpan);
 			
+		}
+		
+		/**
+		 * 判断是否有移动到另一个格子，用pressCellX和pressCellY来判断，用于swap item 回退
+		 * {@link #equalTheSameCell(DragObjectInfo)} 是用来设计跟随的，不适用
+		 * 
+		 * @param object
+		 * @return true：移动到另一格子
+		 */
+		public boolean adjustMoveAnotherCell(final DragObjectInfo object) {
+			boolean r = (this.cellXPress == object.cellXPress)
+					&& (this.cellYPress == object.cellYPress);
+
+			return !r;
 		}
 		
 		

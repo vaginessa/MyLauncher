@@ -1,5 +1,8 @@
 package com.xx.mylauncher;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.animation.ValueAnimator;
@@ -13,9 +16,12 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.xx.mylauncher.AnimatorFactory.AnimatorDragFollow1;
+import com.xx.mylauncher.AnimatorFactory.AnimatorSwapItem;
+import com.xx.mylauncher.AnimatorFactory.SwapItemObject;
 import com.xx.mylauncher.CellLayout.DragObjectInfo;
 
 /**
@@ -78,6 +84,8 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 //		updateDragInfoAssist(canvas);
 		
 		updateDragFollowAnimDispatchDraw(canvas);
+		
+		updateSwapItemAnimDispatchDraw(canvas);
 		
 		/*
 		 * DragView滑回指定位置
@@ -207,6 +215,182 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		}
 		
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private static final String TAG_SWAP = TAG + "swap";
+	private DragObjectInfo m_DragObjectInfoLast;
+	
+	private AnimatorSwapItem m_AnimatorSwapItem;
+	
+	private List<SwapItemObject> m_ListHintObjectOnDraw = new ArrayList<AnimatorFactory.SwapItemObject>();
+	
+	private List<SwapItemObject> m_ListFallbackOnDraw = new ArrayList<AnimatorFactory.SwapItemObject>();
+	
+	/**
+	 * 更新交换hint动画
+	 */
+	public void updateSwapItemAnimHint() {
+		invalidate();
+	}
+	
+	/**
+	 * 更新交换回落动画
+	 */
+	public void updateSwapItemAnimFallback() {
+		invalidate();
+	}
+	
+	private void updateSwapItemAnimDispatchDraw(Canvas canvas) {
+		updateSwapItemAnimHintObjectDispatchDraw(canvas);
+		updateSwapItemAnimFallbackDispatchDraw(canvas);
+	}
+
+	private void updateSwapItemAnimFallbackDispatchDraw(Canvas canvas) {
+		
+		for (SwapItemObject fallbackItem : m_ListFallbackOnDraw) {
+			if (fallbackItem.isInvalid) {
+				fallbackItem.isInvalid = false;
+				canvas.drawBitmap(fallbackItem.bitmapItemView, fallbackItem.curX, fallbackItem.curY, null);
+			}
+		}
+	}
+
+	private void updateSwapItemAnimHintObjectDispatchDraw(Canvas canvas) {
+		
+		for (SwapItemObject hintItem : m_ListHintObjectOnDraw) {
+			if (hintItem.isInvalid) {
+				hintItem.isInvalid = false;
+				canvas.drawBitmap(hintItem.bitmapItemView, hintItem.curX, hintItem.curY, null);
+			}
+		}
+	}
+	
+	/**
+	 * 交换图标，在CellLayout中调用
+	 * @param dragObject
+	 */
+	public void updateSwapItem(final DragObjectInfo dragObject) {
+//		Utils.log(TAG_SWAP, "updateSwapItem");
+		
+		boolean bUpdate = (m_DragObjectInfoLast==null) || (m_DragObjectInfoLast.adjustMoveAnotherCell(dragObject) );
+
+		if (bUpdate) {
+			m_DragObjectInfoLast = (DragObjectInfo) dragObject.clone();
+		}
+		
+		if (bUpdate) {
+			Utils.log(TAG_SWAP, "here..");
+			
+			CellInfo.CellType dragType = ((CellInfo)dragObject.itemView.getTag()).getType();
+
+			if (dragType == CellInfo.CellType.SHORT_CUT) {
+				swapItemFromDragShortcut(dragObject);
+				
+			} else {
+				/*
+				 * 暂时不处理
+				 */
+				// TODO
+			}
+
+		} // end if update
+		
+		
+	}
+	
+	
+	private void swapItemFromDragShortcut(DragObjectInfo dragObject) {
+		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
+		final View[][] viewChildren = curCellLayout.getAllChildrenView();
+		final int[] iArrCoor = new int[2];
+		
+		int iFlagOcupidType = calcFlagOcupidType(dragObject.flagOcupiedList);
+		SwapItemObject dragSwapObject = new SwapItemObject();
+		SwapItemObject hintSwapObject;
+		
+		if (iFlagOcupidType == 1) {
+			//config hint SwapObject and dragSwapObject
+			Utils.log(TAG_SWAP, "hintObject not null");
+			int[] iArrOcupidItem = dragObject.flagOcupiedList.get(0);
+			hintSwapObject = new SwapItemObject();
+			hintSwapObject.itemView = viewChildren[iArrOcupidItem[0]][iArrOcupidItem[1]];
+			hintSwapObject.bitmapItemView = Utils.getViewBitmap(hintSwapObject.itemView);
+			curCellLayout.adjustToDragLayer(iArrCoor, hintSwapObject.itemView, getContext(), true);
+			hintSwapObject.oriX = iArrCoor[0];
+			hintSwapObject.oriY = iArrCoor[1];
+			
+			dragSwapObject.itemView = dragObject.itemView;
+			dragSwapObject.bitmapItemView = Utils.getViewBitmap(dragSwapObject.itemView);
+			curCellLayout.adjustToDragLayer(iArrCoor, dragSwapObject.itemView, getContext(), true);
+			dragSwapObject.oriX = iArrCoor[0];
+			dragSwapObject.oriY = iArrCoor[1];
+			
+		} else {
+			Utils.log(TAG_SWAP, "hintSwapObject null");
+			hintSwapObject = null;
+		}
+		
+		m_AnimatorSwapItem.startHintAnim(dragSwapObject, hintSwapObject);
+		m_AnimatorSwapItem.startFallbackAnim(hintSwapObject);
+	}
+
+	/**
+	 * 计算被占用的位置的item view 的类型
+	 * 
+	 * @param flagOcupiedList
+	 * @return -1：列表为空；-2：同时有shortcut和widget；-3：widget的数量大于1；1：一个shortcut；2：
+	 *         大于一个shortcut；3：一个widget
+	 */
+	private int calcFlagOcupidType(List<int[]> flagOcupiedList) {
+		final View[][] childrenView = m_DragController.getLauncher().getWorkspace().getCurCellLayout().getAllChildrenView();
+		int iResult;
+		int iShortCutCount = 0;
+		int iWidgetCount = 0;
+		CellInfo cellInfo;
+		for (int[] item : flagOcupiedList) {
+			cellInfo = (CellInfo) childrenView[item[0]][item[1]].getTag();
+			if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
+				iShortCutCount++;
+			} else if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
+				iWidgetCount++;
+			}
+
+		}
+		if (iShortCutCount == 0 && iWidgetCount == 0) {
+			iResult = -1;
+		} else if (iShortCutCount > 0 && iWidgetCount > 0) {
+			iResult = -2;
+		} else if (iShortCutCount == 0 && iWidgetCount > 1) {
+			iResult = -3;
+		} else if (iShortCutCount == 1 && iWidgetCount == 0) {
+			iResult = 1;
+		} else if (iShortCutCount > 1 && iWidgetCount == 0) {
+			iResult = 2;
+		} else if (iShortCutCount == 0 && iWidgetCount == 1) {
+			iResult = 3;
+		} else {
+			iResult = -1;
+			Utils.logE(TAG, "程序有错！！重新分析");
+		}
+
+		return iResult;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/** 用来处理DragView移动到指定位置的属性动画 */
 	private ValueAnimator m_DragViewAnim;
@@ -464,7 +648,9 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 	@Override
 	public void onDragStart(DragSource source, Object info, int dragAction) {
 		// TODO Auto-generated method stub
-		
+		if (m_AnimatorSwapItem == null) {
+			m_AnimatorSwapItem = AnimatorSwapItem.getInstance(this, m_ListHintObjectOnDraw, m_ListFallbackOnDraw, m_DragController.getLauncher());
+		}
 	}
 
 	@Override

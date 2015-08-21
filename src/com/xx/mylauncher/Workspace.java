@@ -280,6 +280,7 @@ public class Workspace extends PagedView  implements DragSource, DropTarget{
 			m_DragController.getLauncher().getLauncherDBManager().updateDragInfo(cellInfo);
 		}
 		
+		m_DragLayer.onSwapItemCompleted(Workspace.this, success);
 	}
 
 		

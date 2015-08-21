@@ -385,6 +385,8 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 			onDropCompletedInSelf(dragView, itemInfo, success);
 			
 		} else if (dropTargetView instanceof Workspace) {
+			m_DragLayer.onSwapItemCompleted(HotSeat.this, success);
+			
 			if (!success) {
 				onDropCompletedInSelf(dragView, itemInfo, success);
 				
@@ -414,6 +416,8 @@ public class HotSeat extends ViewGroup implements DropTarget, DragSource {
 			final CellInfo cellInfo = (CellInfo) itemInfo;
 			m_Launcher.getLauncherDBManager().updateDragInfo(cellInfo);
 		}
+		
+		
 	}
 	
 	/**

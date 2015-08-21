@@ -645,11 +645,18 @@ public class CellLayout extends ViewGroup {
 			int yOffset, DragView dragView, Object dragInfo) {
 		Utils.log(TAG, "onDragEnter");
 		
+		initDragObjectInfo(dragInfo);
+		
+		initFollowDragObject(dragView);
+	}
+
+	private void initDragObjectInfo(final Object dragInfo) {
+		final CellInfo cellInfo = (CellInfo) dragInfo;
 		m_DragObjectInfo = new DragObjectInfo();
 		final DragObjectInfo dragObjectInfo = m_DragObjectInfo;
 		dragObjectInfo.reset();
-		
-		initFollowDragObject(dragView);
+		dragObjectInfo.preCellX = cellInfo.getCellX();
+		dragObjectInfo.preCellY = cellInfo.getCellY();
 	}
 
 	private void initFollowDragObject(DragView dragView) {

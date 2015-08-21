@@ -239,6 +239,8 @@ public class AnimatorFactory {
 		/** fallback列表，保存最新的fallback元素 */
 		private List<SwapItemObject> m_ListFallBackObject = new ArrayList<AnimatorFactory.SwapItemObject>();
 		
+		private SwapItemObject m_SwapItemObjectLastHint;
+		
 		private AnimatorSwapItem() {
 			m_SwapAnimatorPool = SwapAnimatorPool.getInstance();
 		}
@@ -258,6 +260,8 @@ public class AnimatorFactory {
 		
 		public void startHintAnim(final SwapItemObject dragObject, final SwapItemObject hintObject) {
 			Utils.log(TAG, "startHintAnim");
+			
+			m_SwapItemObjectLastHint = hintObject;
 			
 			if (hintObject != null) {
 				final SwapItemObject findObject = findFallbackObjectInFallBackList(hintObject);
@@ -709,6 +713,117 @@ public class AnimatorFactory {
 			
 			return resultObject;
 		}
+		
+		/**
+		 * 当释放时，有需要，则取消hint list 中的动画
+		 */
+		private void clearHintAnim() {
+			final List<SwapItemObject> listHintObjects = m_ListHintObject;
+			final List<SwapItemObject> listFallback = m_ListFallBackObject;
+			final List<SwapItemObject> listFallbackOnDraw = m_ListFallBackOnDrawObject;
+			
+			for (SwapItemObject item : listHintObjects) {
+				item.animator.end();
+			}
+			
+			listHintObjects.clear();
+			listFallback.clear();
+			listFallbackOnDraw.clear();
+		}
+		
+		public void swapItemOnComplete(final DragSource source, final boolean success, final DragObjectInfo dragObject) {
+			swapItemOnComplete(source, success, dragObject, m_SwapItemObjectLastHint);
+		}
+		
+		/**
+		 * 当拖拽结束时
+		 * @param source
+		 * @param success
+		 */
+		private void swapItemOnComplete(final DragSource source, final boolean success, final DragObjectInfo dragObject, final SwapItemObject lastObject) {
+			//TODO
+			final MainActivity launcher = m_Launcher;
+			final LauncherDBManager dbManager = launcher.getLauncherDBManager();
+			final HotSeat hotSeat = launcher.getHotSeat();
+			final CellLayout curCellLayout =launcher.getWorkspace().getCurCellLayout();
+			
+			if (source instanceof HotSeat) {
+				if (success) {
+					/*
+					 * 1. 取消hint anim
+					 * 2. 修改last item view,到HotSeat
+					 * 3. 加入数据库
+					 */
+					Utils.log(TAG+"swap", "source=HotSeat, true, success=%b", success);
+					
+					if (lastObject != null) {
+						Utils.log(TAG+"swap", "lastObject not null");
+						final CellInfo lastCellInfo = (CellInfo) lastObject.itemView.getTag();
+						final CellInfo dragCellInfo = (CellInfo) dragObject.itemView.getTag();
+						final CellLayout.LayoutParams lp = (com.xx.mylauncher.CellLayout.LayoutParams) lastObject.itemView.getLayoutParams();
+						
+						lastCellInfo.setLocation(CellInfo.CellLocation.HOTSEAT);
+						lastCellInfo.setCellX(dragCellInfo.getCellX());
+						lastCellInfo.setCellY(dragCellInfo.getCellY());
+						lastCellInfo.setHotSeatCellX(dragCellInfo.getHotSeatCellX());
+						lastCellInfo.setHotSeatCellY(dragCellInfo.getHotSeatCellY());
+						
+						lastObject.setItemVisibility(View.VISIBLE);
+						hotSeat.removeView(dragObject.itemView);
+						curCellLayout.removeView(lastObject.itemView);
+						((ShortCutView2)lastObject.itemView).setLabelVisibility(View.GONE);
+						hotSeat.addView(lastObject.itemView);
+						hotSeat.flagOcuped(lastCellInfo);
+						hotSeat.requestLayout();
+						
+						dbManager.updateDragInfo(lastCellInfo);
+					}
+					
+					clearHintAnim();
+				} else {
+					Utils.log(TAG+"swap", "source=HotSeat, false, success=%b", success);
+					
+				}
+				
+			} else if (source instanceof Workspace) {
+				if (success) {
+					/*
+					 * 1. 取消Hint动画-last swap item
+					 * 2. last swap item 的 item view修改属性
+					 * 3. 加入数据库
+					 * 4. requestLayout
+					 */
+					Utils.log(TAG+"swap", "source=Workspace, true, success=%b", success);
+					
+					if (lastObject != null) {
+						Utils.log(TAG+"swap", "lastObject not null");
+						final CellInfo lastCellInfo = (CellInfo) lastObject.itemView.getTag();							
+						final CellLayout.LayoutParams lp = (com.xx.mylauncher.CellLayout.LayoutParams) lastObject.itemView.getLayoutParams();
+						
+						lastCellInfo.setCellX(dragObject.preCellX);
+						lastCellInfo.setCellY(dragObject.preCellY);
+						
+						lp.cellX = dragObject.preCellX;
+						lp.cellY = dragObject.preCellY;
+						lastObject.itemView.setLayoutParams(lp);
+						lastObject.setItemVisibility(View.VISIBLE);
+						curCellLayout.flagOcuped(lastCellInfo);
+						curCellLayout.requestLayout();
+
+						dbManager.updateDragInfo(lastCellInfo);
+					}
+					
+					clearHintAnim();
+				} else {
+					Utils.log(TAG+"swap", "source=Workspace, false, success=%b", success);
+					
+				}
+			}
+			
+
+
+		}
+		
 	}
 	
 	/**

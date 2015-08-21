@@ -1,5 +1,6 @@
 package com.xx.mylauncher;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -291,8 +292,12 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 			CellInfo.CellType dragType = ((CellInfo)dragObject.itemView.getTag()).getType();
 
 			if (dragType == CellInfo.CellType.SHORT_CUT) {
-				swapItemFromDragShortcut(dragObject);
-				
+//				swapItemFromDragShortcut(dragObject);
+				if (m_FromDragshortCutRunnable != null) {
+					removeCallbacks(m_FromDragshortCutRunnable);
+				}
+				m_FromDragshortCutRunnable = new SwapItemFromDragshortCutRunnable(this, dragObject);
+				postDelayed(m_FromDragshortCutRunnable, L_SWAPITEM_DELAYED_TIME);
 			} else {
 				/*
 				 * 暂时不处理
@@ -305,6 +310,25 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		
 	}
 	
+	/** 交换图标的停留时间 */
+	private static final long L_SWAPITEM_DELAYED_TIME = 0;
+	private SwapItemFromDragshortCutRunnable m_FromDragshortCutRunnable;
+	
+	static class SwapItemFromDragshortCutRunnable implements Runnable {
+		private SoftReference<DragLayer> m_SrDragLayer;
+		private DragObjectInfo m_DragObject;
+		
+		public SwapItemFromDragshortCutRunnable(DragLayer dragLayer, DragObjectInfo dragObjectInfo) {
+			this.m_SrDragLayer = new SoftReference<DragLayer>(dragLayer);
+			this.m_DragObject = dragObjectInfo;
+		}
+		
+		@Override
+		public void run() {
+			m_SrDragLayer.get().swapItemFromDragShortcut(m_DragObject);
+		}
+	}
+	
 	
 	private void swapItemFromDragShortcut(DragObjectInfo dragObject) {
 		final CellLayout curCellLayout = m_DragController.getLauncher().getWorkspace().getCurCellLayout();
@@ -313,7 +337,7 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		
 		int iFlagOcupidType = calcFlagOcupidType(dragObject.flagOcupiedList);
 		SwapItemObject dragSwapObject = new SwapItemObject();
-		SwapItemObject hintSwapObject;
+		SwapItemObject hintSwapObject = null;
 		
 		if (iFlagOcupidType == 1) {
 			//config hint SwapObject and dragSwapObject
@@ -333,19 +357,30 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 			dragSwapObject.oriY = iArrCoor[1];
 			
 		} else {
-			Utils.log(TAG_SWAP, "hintSwapObject null");
-			hintSwapObject = null;
+			if (iFlagOcupidType != -2) {
+				Utils.log(TAG_SWAP, "hintSwapObject null");
+				hintSwapObject = null;
+			}
 		}
 		
-		m_AnimatorSwapItem.startHintAnim(dragSwapObject, hintSwapObject);
-		m_AnimatorSwapItem.startFallbackAnim(hintSwapObject);
+		if (iFlagOcupidType != -2) {
+			m_AnimatorSwapItem.startHintAnim(dragSwapObject, hintSwapObject);
+			m_AnimatorSwapItem.startFallbackAnim(hintSwapObject);
+		}
 	}
+	
+	public void onSwapItemCompleted(final DragSource source, final boolean success) {
+		if (m_AnimatorSwapItem != null) {
+			m_AnimatorSwapItem.swapItemOnComplete(source, success, m_DragObjectInfo);
+		}
+	}
+	
 
 	/**
 	 * 计算被占用的位置的item view 的类型
 	 * 
 	 * @param flagOcupiedList
-	 * @return -1：列表为空；-2：同时有shortcut和widget；-3：widget的数量大于1；1：一个shortcut；2：
+	 * @return -2：程序出错； -1：列表为空；-2：同时有shortcut和widget；-3：widget的数量大于1；1：一个shortcut；2：
 	 *         大于一个shortcut；3：一个widget
 	 */
 	private int calcFlagOcupidType(List<int[]> flagOcupiedList) {
@@ -354,8 +389,16 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		int iShortCutCount = 0;
 		int iWidgetCount = 0;
 		CellInfo cellInfo;
+		View view;
 		for (int[] item : flagOcupiedList) {
-			cellInfo = (CellInfo) childrenView[item[0]][item[1]].getTag();
+//			cellInfo = (CellInfo) childrenView[item[0]][item[1]].getTag();
+			view = childrenView[item[0]][item[1]];
+			if (view == null) {		//TODO 这里要分析有时为什么会为空，而不是这样忽略
+				iResult = -2;
+				return iResult;
+			} 
+			cellInfo = (CellInfo) view.getTag();
+			
 			if (cellInfo.getType() == CellInfo.CellType.SHORT_CUT) {
 				iShortCutCount++;
 			} else if (cellInfo.getType() == CellInfo.CellType.WIDGET) {
@@ -376,7 +419,7 @@ public class DragLayer extends LinearLayout implements DragController.DragListen
 		} else if (iShortCutCount == 0 && iWidgetCount == 1) {
 			iResult = 3;
 		} else {
-			iResult = -1;
+			iResult = -2;
 			Utils.logE(TAG, "程序有错！！重新分析");
 		}
 

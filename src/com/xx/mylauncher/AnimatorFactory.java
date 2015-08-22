@@ -24,6 +24,7 @@ public class AnimatorFactory {
 
 	/**
 	 * 交换图标要用到的动画线程池
+	 * 这里修改了，因为属性动画对象的内部实现，不适用于构造线程池
 	 * @author baoxing
 	 *
 	 */
@@ -281,7 +282,8 @@ public class AnimatorFactory {
 			
 			if (hintObject != null) {
 				final SwapItemObject findObject = findFallbackObjectInFallBackList(hintObject);
-				if (findObject != null) {
+//				if (findObject != null) {
+				if (findObject!=null && findObject.animator != null) {
 					Animator animator = findObject.animator;
 					animator.cancel();
 					removeObjectInFallBackList(findObject);

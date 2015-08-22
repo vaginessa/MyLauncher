@@ -48,17 +48,17 @@ public class AnimatorFactory {
 		private static SwapAnimatorPool m_Instance;
 		
 		private SwapAnimatorPool() {
-			for (int i=0; i<I_ANIMATOR_SET_POOL_SIZE; i++) {
-				AnimatorSet item = new AnimatorSet();
-				m_ListAnimatorSet.add(item);
-				m_ListAnimatorSetFlag.add(Boolean.FALSE);
-			}
-			
-			for (int i=0; i<I_VALUEANIMATOR_POOL_SIZE; i++) {
-				ValueAnimator item = new ValueAnimator();
-				m_ListValueAnimator.add(item);
-				m_ListValueAnimatorFlag.add(Boolean.FALSE);
-			}
+//			for (int i=0; i<I_ANIMATOR_SET_POOL_SIZE; i++) {
+//				AnimatorSet item = new AnimatorSet();
+//				m_ListAnimatorSet.add(item);
+//				m_ListAnimatorSetFlag.add(Boolean.FALSE);
+//			}
+//			
+//			for (int i=0; i<I_VALUEANIMATOR_POOL_SIZE; i++) {
+//				ValueAnimator item = new ValueAnimator();
+//				m_ListValueAnimator.add(item);
+//				m_ListValueAnimatorFlag.add(Boolean.FALSE);
+//			}
 		}
 		
 		private void increaseCapacityAnimatorSet() {
@@ -133,8 +133,8 @@ public class AnimatorFactory {
 			return iPostion;
 		}
 		
-		
-		/** 获取池中的ValueAnimator */
+/*		
+		*//** 获取池中的ValueAnimator *//*
 		public ValueAnimator getValueAnimator() {
 			Utils.log(TAG, "getValueAnimator");
 			
@@ -153,10 +153,19 @@ public class AnimatorFactory {
 			return valueAnimator;
 //			return new ValueAnimator();
 		}
+		*/
 		
+		
+		public ValueAnimator getValueAnimator() {
+			return new ValueAnimator();
+		}
+		
+		public AnimatorSet getAnimatorSet() {
+			return new AnimatorSet();
+		}
 		
 		/** 获取池中的AnimatorSet */
-		public AnimatorSet getAnimatorSet() {
+/*		public AnimatorSet getAnimatorSet() {
 			Utils.log(TAG, "getAnimatorSet");
 			
 			int iPositon = getIdlePostionAnimatorSet();
@@ -178,11 +187,10 @@ public class AnimatorFactory {
 			}
 			
 			return set;
-//			return new AnimatorSet();
-		}
+		}*/
 		
 		
-		public void relaseAnimatorSet(AnimatorSet set) {
+/*		public void relaseAnimatorSet(AnimatorSet set) {
 			Utils.log(TAG, "relaseAnimatorSet");
 			
 			int iPostion = m_ListAnimatorSet.indexOf(set);
@@ -191,18 +199,26 @@ public class AnimatorFactory {
 				Utils.log(TAG, "relase success position=%d", iPostion);
 			}
 			
+		}*/
+		
+		public void relaseAnimatorSet(AnimatorSet set) {
+			
 		}
 		
 		public void relaseValueAnimator(ValueAnimator valueAnimator) {
-			Utils.log(TAG, "relaseValueAnimator");			
 			
-			int iPositon = m_ListValueAnimator.indexOf(valueAnimator);
-			if (iPositon != -1) {
-				m_ListValueAnimatorFlag.set(iPositon, Boolean.FALSE);
-				Utils.log(TAG, "realese ValueAnimator succeed");				
-			}
 		}
-		
+//		
+//		public void relaseValueAnimator(ValueAnimator valueAnimator) {
+//			Utils.log(TAG, "relaseValueAnimator");			
+//			
+//			int iPositon = m_ListValueAnimator.indexOf(valueAnimator);
+//			if (iPositon != -1) {
+//				m_ListValueAnimatorFlag.set(iPositon, Boolean.FALSE);
+//				Utils.log(TAG, "realese ValueAnimator succeed");				
+//			}
+//		}
+//		
 		
 	}
 	
@@ -214,7 +230,7 @@ public class AnimatorFactory {
 	static class AnimatorSwapItem {
 		private static final long L_AINM_HINT_MOVE_DURATION = 400;
 
-		private static final long L_ANIM_HINT_ROCK_DURATION = 300;
+		private static final long L_ANIM_HINT_ROCK_DURATION = 250;
 
 		protected static final int I_ANIM_HINT_ROCK_OFFSET_X = 0;
 
@@ -615,6 +631,15 @@ public class AnimatorFactory {
 					swapItemCloned.finallyX = swapItemCloned.curX;
 					swapItemCloned.finallyY = swapItemCloned.curY;
 					animatorPool.relaseAnimatorSet((AnimatorSet) swapItemCloned.animator);
+/*					if (swapItemCloned.animator instanceof AnimatorSet) {
+						AnimatorSet set = (AnimatorSet) swapItemCloned.animator;
+						for (Animator item : set.getChildAnimations()) {
+							if (item instanceof ValueAnimator) {
+								animatorPool.relaseValueAnimator((ValueAnimator) item);
+							}
+						}
+					}*/
+					
 					removeObjectInHintList(swapItemCloned);
 				}
 				@Override
@@ -740,7 +765,7 @@ public class AnimatorFactory {
 		 * @param source
 		 * @param success
 		 */
-		private void swapItemOnComplete(final DragSource source, final boolean success, final DragObjectInfo dragObject, final SwapItemObject lastObject) {
+		private void swapItemOnComplete(final DragSource source, final boolean success, final DragObjectInfo dragObject, SwapItemObject lastObject) {
 			//TODO
 			final MainActivity launcher = m_Launcher;
 			final LauncherDBManager dbManager = launcher.getLauncherDBManager();
@@ -778,7 +803,8 @@ public class AnimatorFactory {
 						
 						dbManager.updateDragInfo(lastCellInfo);
 					}
-					
+					m_SwapItemObjectLastHint = null;
+					lastObject = m_SwapItemObjectLastHint;
 					clearHintAnim();
 				} else {
 					Utils.log(TAG+"swap", "source=HotSeat, false, success=%b", success);
@@ -812,7 +838,8 @@ public class AnimatorFactory {
 
 						dbManager.updateDragInfo(lastCellInfo);
 					}
-					
+					m_SwapItemObjectLastHint = null;
+					lastObject = null;
 					clearHintAnim();
 				} else {
 					Utils.log(TAG+"swap", "source=Workspace, false, success=%b", success);

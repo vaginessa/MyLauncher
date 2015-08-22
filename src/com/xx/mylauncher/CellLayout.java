@@ -59,6 +59,7 @@ public class CellLayout extends ViewGroup {
 	private int m_iCellVCount;
 	
 	/** [行数VSpan][列数HSpan] */
+//	private volatile boolean m_bCellsOcupied[][];
 	private boolean m_bCellsOcupied[][];
 	
 	/** 当前屏幕的所有child view的索引 array[cellX][cellY] */
